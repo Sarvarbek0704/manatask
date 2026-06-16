@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
@@ -8,22 +8,42 @@ import * as nodemailer from 'nodemailer';
  * usable link locally.
  */
 @Injectable()
-export class MailService {
+export class MailService implements OnModuleInit {
   private readonly logger = new Logger(MailService.name);
   private transporter: nodemailer.Transporter | null = null;
 
   constructor(private config: ConfigService) {
     const host = this.config.get<string>('mail.host');
+    const port = this.config.get<number>('mail.port') ?? 587;
     if (host) {
       this.transporter = nodemailer.createTransport({
         host,
-        port: this.config.get<number>('mail.port'),
-        secure: false,
+        port,
+        secure: port === 465, // 465 = implicit TLS, 587 = STARTTLS
+        requireTLS: port !== 465,
         auth: {
           user: this.config.get<string>('mail.user'),
           pass: this.config.get<string>('mail.pass'),
         },
+        // Fail fast instead of hanging if the host blocks outbound SMTP.
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 15_000,
       });
+    }
+  }
+
+  /** Verify SMTP connectivity at boot so misconfig/port-blocking is obvious in logs. */
+  async onModuleInit() {
+    if (!this.transporter) {
+      this.logger.warn('SMTP not configured — emails will be logged to console only.');
+      return;
+    }
+    try {
+      await this.transporter.verify();
+      this.logger.log('SMTP connection verified — email sending is ready.');
+    } catch (e) {
+      this.logger.error(`SMTP verify FAILED: ${(e as Error).message}`);
     }
   }
 
@@ -33,7 +53,13 @@ export class MailService {
       this.logger.log(`[DEV MAIL] To: ${to} | ${subject}\n${html}`);
       return;
     }
-    await this.transporter.sendMail({ from, to, subject, html });
+    try {
+      const info = await this.transporter.sendMail({ from, to, subject, html });
+      this.logger.log(`Email sent to ${to} (id: ${info.messageId})`);
+    } catch (e) {
+      this.logger.error(`Email to ${to} FAILED: ${(e as Error).message}`);
+      throw e;
+    }
   }
 
   async sendInvitation(to: string, workspaceName: string, link: string) {
