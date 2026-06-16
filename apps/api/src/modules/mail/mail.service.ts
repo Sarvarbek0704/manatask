@@ -39,6 +39,11 @@ export class MailService implements OnModuleInit {
     }
   }
 
+  /** Non-secret transport info for the diagnostics endpoint. */
+  getStatus() {
+    return { mode: this.mode, from: this.parseFrom() };
+  }
+
   async onModuleInit() {
     this.logger.log(`Email transport: ${this.mode}`);
     if (this.mode === 'smtp' && this.transporter) {
