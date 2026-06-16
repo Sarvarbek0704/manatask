@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme — cool neutral surfaces with an indigo-violet accent */
+    --background: 220 24% 98%;
+    --surface: 0 0% 100%;
+    --surface-2: 220 20% 96.5%;
+    --elevated: 0 0% 100%;
+    --border: 220 16% 90%;
+    --border-strong: 220 14% 83%;
+    --input: 220 16% 89%;
+    --ring: 243 75% 59%;
+
+    --foreground: 224 32% 12%;
+    --muted: 220 9% 46%;
+
+    --accent: 243 75% 59%;
+    --accent-hover: 243 62% 52%;
+    --accent-soft: 243 100% 96%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 142 64% 38%;
+    --warning: 32 90% 45%;
+    --danger: 0 70% 50%;
+
+    --shadow-color: 224 40% 30%;
+    --radius: 0.7rem;
+  }
+
+  .dark {
+    /* Dark theme — near-black layered surfaces, luminous accent */
+    --background: 222 18% 7%;
+    --surface: 220 15% 10.5%;
+    --surface-2: 220 13% 14%;
+    --elevated: 220 14% 12.5%;
+    --border: 220 11% 19%;
+    --border-strong: 220 10% 26%;
+    --input: 220 11% 20%;
+    --ring: 243 80% 70%;
+
+    --foreground: 213 27% 92%;
+    --muted: 218 11% 60%;
+
+    --accent: 243 82% 70%;
+    --accent-hover: 243 82% 76%;
+    --accent-soft: 243 40% 18%;
+    --accent-foreground: 224 40% 8%;
+
+    --success: 142 58% 52%;
+    --warning: 32 90% 58%;
+    --danger: 0 72% 62%;
+
+    --shadow-color: 220 60% 2%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Refined focus ring */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.7);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: hsl(var(--accent) / 0.25);
+  }
+}
+
+@layer components {
+  /* Slim, theme-aware scrollbars */
+  .scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border-strong)) transparent;
+  }
+  .scroll-area::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  .scroll-area::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border-strong));
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .scroll-area::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted) / 0.6);
+  }
+
+  /* Subtle dotted texture for empty states / auth panel */
+  .bg-grid {
+    background-image: radial-gradient(hsl(var(--foreground) / 0.06) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "manatask",
+  "version": "0.1.0",
+  "private": true,
+  "description": "manaTask — multi-tenant SaaS task management",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @manatask/shared",
+    "dev:api": "npm run start:dev -w @manatask/api",
+    "dev:web": "npm run dev -w @manatask/web",
+    "dev": "npm run build:shared && concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\"",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "seed": "npm run seed -w @manatask/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
