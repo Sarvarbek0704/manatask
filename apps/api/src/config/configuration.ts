@@ -38,6 +38,9 @@ export default () => ({
     enabled: !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET,
   },
   mail: {
+    // HTTP email provider (recommended on hosts that block SMTP, e.g. Render).
+    brevoApiKey: process.env.BREVO_API_KEY ?? '',
+    resendApiKey: process.env.RESEND_API_KEY ?? '',
     host: process.env.SMTP_HOST ?? '',
     port: parseInt(process.env.SMTP_PORT ?? '587', 10),
     user: process.env.SMTP_USER ?? '',

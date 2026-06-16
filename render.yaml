@@ -48,6 +48,12 @@ services:
         sync: false
       - key: GOOGLE_CALLBACK_URL   # https://manatask-api.onrender.com/api/auth/google/callback
         sync: false
+      # Recommended: HTTP email provider (Render blocks SMTP). Brevo needs no domain.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      # SMTP fallback (usually blocked on Render — leave empty if using Brevo)
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -55,8 +61,6 @@ services:
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS
-        sync: false
-      - key: MAIL_FROM
         sync: false
       # Optional
       - key: REDIS_URL
