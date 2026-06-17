@@ -1,22 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { differenceInCalendarDays, parseISO, format } from 'date-fns';
-import { Flame, CheckCircle2, Clock, CalendarRange, Target } from 'lucide-react';
-import { useChallenge, useChallengeProgress, useMembers } from '@/lib/hooks';
-import { useAuth } from '@/lib/store';
+import { Flame, CheckCircle2, Clock, CalendarRange, Target, Pencil } from 'lucide-react';
+import {
+  useChallenge,
+  useChallengeProgress,
+  useMembers,
+  useUpsertChallenge,
+  useMyWorkspaces,
+} from '@/lib/hooks';
+import { useAuth, useWorkspace } from '@/lib/store';
 import { useI18n } from '@/lib/i18n';
 import { Card, Skeleton } from '@/components/ui/primitives';
 import { Avatar } from '@/components/ui/avatar';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Input, Label } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { ContributionCalendar } from '@/components/ContributionCalendar';
 import { cn } from '@/lib/cn';
 
 export default function ChallengePage() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
   const { data: members } = useMembers();
   const { data: challenge } = useChallenge();
+  const isOwner = workspaces?.find((w) => w.id === currentWorkspaceId)?.role === 'owner';
+  const [editing, setEditing] = useState(false);
 
   const [userId, setUserId] = useState<string>('me');
   const targetUserId = userId === 'me' ? undefined : userId;
@@ -43,7 +56,13 @@ export default function ChallengePage() {
           </div>
         </div>
 
-        {/* Member switcher */}
+        {/* Member switcher + owner edit */}
+        <div className="flex items-center gap-2">
+          {isOwner && (
+            <Button variant="secondary" size="icon" onClick={() => setEditing(true)} aria-label={t('challenge.edit')}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
         <Select value={userId} onValueChange={setUserId}>
           <SelectTrigger className="w-52">
             <SelectValue />
@@ -59,7 +78,12 @@ export default function ChallengePage() {
             ))}
           </SelectContent>
         </Select>
+        </div>
       </div>
+
+      {challenge && (
+        <ChallengeEditDialog open={editing} onOpenChange={setEditing} challenge={challenge} />
+      )}
 
       {/* Big progress */}
       <Card className="p-6">
@@ -107,5 +131,70 @@ function Stat({ icon: Icon, value, label, cls }: { icon: any; value: number; lab
       </div>
       <p className="text-[11px] text-muted">{label}</p>
     </div>
+  );
+}
+
+function ChallengeEditDialog({
+  open,
+  onOpenChange,
+  challenge,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  challenge: { title: string; startDate: string; endDate: string; target: number };
+}) {
+  const { t } = useI18n();
+  const upsert = useUpsertChallenge();
+  const [title, setTitle] = useState(challenge.title);
+  const [startDate, setStartDate] = useState(challenge.startDate);
+  const [endDate, setEndDate] = useState(challenge.endDate);
+  const [target, setTarget] = useState(String(challenge.target));
+
+  useEffect(() => {
+    if (open) {
+      setTitle(challenge.title);
+      setStartDate(challenge.startDate);
+      setEndDate(challenge.endDate);
+      setTarget(String(challenge.target));
+    }
+  }, [open, challenge]);
+
+  const save = async () => {
+    await upsert.mutateAsync({ title, startDate, endDate, target: Number(target) });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent size="md">
+        <DialogHeader>
+          <DialogTitle>{t('challenge.edit')}</DialogTitle>
+        </DialogHeader>
+        <DialogBody className="space-y-4">
+          <div>
+            <Label htmlFor="ch-title">{t('task.title')}</Label>
+            <Input id="ch-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="ch-start">{t('challenge.start')}</Label>
+              <Input id="ch-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="ch-end">{t('challenge.end')}</Label>
+              <Input id="ch-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="ch-target">{t('challenge.target')}</Label>
+            <Input id="ch-target" type="number" min={1} value={target} onChange={(e) => setTarget(e.target.value)} />
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>{t('task.cancel')}</Button>
+          <Button onClick={save} loading={upsert.isPending}>{t('common.save')}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

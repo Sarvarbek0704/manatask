@@ -18,8 +18,8 @@ import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateWorkLogBody, UpdateWorkLogBody, WorkLogQuery } from './dto';
 
-// Default challenge if none configured: 2026-06-18 → 2026-12-31, 100 days.
-const DEFAULT_CHALLENGE = { title: '100-Day Challenge', startDate: '2026-06-18', endDate: '2026-12-31', target: 100 };
+// Default challenge if none configured: 2026-06-17 → 2026-12-31, 100 days.
+const DEFAULT_CHALLENGE = { title: '100-Day Challenge', startDate: '2026-06-17', endDate: '2026-12-31', target: 100 };
 
 function eachDay(start: string, end: string): string[] {
   const out: string[] = [];
