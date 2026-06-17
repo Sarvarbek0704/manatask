@@ -18,13 +18,19 @@ export class ReportsService {
     @InjectRepository(Sprint) private sprints: Repository<Sprint>,
   ) {}
 
-  async dashboard(workspaceId: string, projectId?: string): Promise<DashboardSummary> {
+  async dashboard(
+    workspaceId: string,
+    projectId?: string,
+    opts: { assigneeId?: string } = {},
+  ): Promise<DashboardSummary> {
+    // Non-leaders get a personal dashboard scoped to their own tasks.
     const base = () => {
       const qb = this.tasks
         .createQueryBuilder('t')
         .leftJoin('t.status', 'status')
         .where('t.workspaceId = :workspaceId', { workspaceId });
       if (projectId) qb.andWhere('t.projectId = :projectId', { projectId });
+      if (opts.assigneeId) qb.andWhere('t.assigneeId = :selfId', { selfId: opts.assigneeId });
       return qb;
     };
 
@@ -72,7 +78,8 @@ export class ReportsService {
       .andWhere('t.updatedAt >= :weekAgo', { weekAgo })
       .getCount();
 
-    const assigneeRows = await base()
+    // Team workload is leader-only; personal dashboards omit it.
+    const assigneeRows = opts.assigneeId ? [] : await base()
       .leftJoin('t.assignee', 'assignee')
       .andWhere('t.assigneeId IS NOT NULL')
       .select('assignee.id', 'id')

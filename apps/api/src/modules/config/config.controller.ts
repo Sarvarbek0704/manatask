@@ -25,19 +25,19 @@ export class ConfigController {
   }
 
   @Post('projects/:projectId/custom-fields')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   createField(@Param('projectId') projectId: string, @Body() body: any) {
     return this.customFields.create(projectId, body);
   }
 
   @Patch('projects/:projectId/custom-fields/:id')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   updateField(@Param('projectId') projectId: string, @Param('id') id: string, @Body() body: any) {
     return this.customFields.update(projectId, id, body);
   }
 
   @Delete('projects/:projectId/custom-fields/:id')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   deleteField(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.customFields.remove(projectId, id);
   }
@@ -70,17 +70,18 @@ export class ConfigController {
   }
 
   @Post('projects/:projectId/templates')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   createTemplate(@Param('projectId') projectId: string, @Body() body: any) {
     return this.templates.create(projectId, body);
   }
 
   @Delete('projects/:projectId/templates/:id')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   deleteTemplate(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.templates.remove(projectId, id);
   }
 
+  // Creating a task from a template is normal task work — members may do it.
   @Post('projects/:projectId/templates/:id/instantiate')
   @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
   instantiate(
@@ -100,13 +101,13 @@ export class ConfigController {
   }
 
   @Post('projects/:projectId/recurring')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   createRecurring(@WorkspaceId() ws: string, @CurrentUser() u: RequestUser, @Param('projectId') projectId: string, @Body() body: any) {
     return this.recurring.create(ws, projectId, u.id, body);
   }
 
   @Delete('projects/:projectId/recurring/:id')
-  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.MEMBER)
+  @UseGuards(RolesGuard) @MinRole(WorkspaceRole.ADMIN)
   deleteRecurring(@Param('projectId') projectId: string, @Param('id') id: string) {
     return this.recurring.remove(projectId, id);
   }

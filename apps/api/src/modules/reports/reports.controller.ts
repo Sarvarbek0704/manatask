@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { WorkspaceRole } from '@manatask/shared';
 import { ReportsService } from './reports.service';
-import { WorkspaceId, MinRole } from '../../common/decorators';
+import { WorkspaceId, MinRole, CurrentUser, CurrentRole, RequestUser } from '../../common/decorators';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
@@ -13,8 +13,15 @@ export class ReportsController {
   constructor(private service: ReportsService) {}
 
   @Get('dashboard')
-  dashboard(@WorkspaceId() ws: string, @Query('projectId') projectId?: string) {
-    return this.service.dashboard(ws, projectId);
+  dashboard(
+    @WorkspaceId() ws: string,
+    @CurrentUser() user: RequestUser,
+    @CurrentRole() role: WorkspaceRole,
+    @Query('projectId') projectId?: string,
+  ) {
+    // Workers/guests see only their own tasks; admins/owners see the whole workspace.
+    const isLeader = role === WorkspaceRole.OWNER || role === WorkspaceRole.ADMIN;
+    return this.service.dashboard(ws, projectId, isLeader ? {} : { assigneeId: user.id });
   }
 
   @Get('time')

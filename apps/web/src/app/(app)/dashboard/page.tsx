@@ -11,9 +11,9 @@ import {
   ArrowUpRight,
   FolderKanban,
 } from 'lucide-react';
-import { useDashboard, useProjects } from '@/lib/hooks';
+import { useDashboard, useProjects, useMyWorkspaces } from '@/lib/hooks';
 import { useI18n } from '@/lib/i18n';
-import { useAuth } from '@/lib/store';
+import { useAuth, useWorkspace } from '@/lib/store';
 import { Card, Skeleton } from '@/components/ui/primitives';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,10 @@ export default function DashboardPage() {
   const { data: summary, isLoading } = useDashboard();
   const { data: projects } = useProjects();
   const { user } = useAuth();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
+  const role = workspaces?.find((w) => w.id === currentWorkspaceId)?.role;
+  const isLeader = role === 'owner' || role === 'admin';
   const [creating, setCreating] = useState(false);
 
   const stats = [
@@ -43,11 +47,15 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-semibold tracking-tight">
             {firstName ? `Welcome back, ${firstName}` : t('nav.dashboard')}
           </h1>
-          <p className="mt-1 text-sm text-muted">Here's what's happening across your workspace.</p>
+          <p className="mt-1 text-sm text-muted">
+            {isLeader ? t('dashboard.subtitleTeam') : t('dashboard.subtitleSelf')}
+          </p>
         </div>
-        <Button onClick={() => setCreating(true)} variant="secondary">
-          <Plus className="h-4 w-4" /> {t('project.new')}
-        </Button>
+        {isLeader && (
+          <Button onClick={() => setCreating(true)} variant="secondary">
+            <Plus className="h-4 w-4" /> {t('project.new')}
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -69,12 +77,14 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-5">
         {/* Projects */}
-        <Card className="lg:col-span-3">
+        <Card className={isLeader ? 'lg:col-span-3' : 'lg:col-span-5'}>
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <h2 className="font-semibold">{t('nav.projects')}</h2>
-            <button onClick={() => setCreating(true)} className="flex items-center gap-1 text-sm font-medium text-accent hover:underline">
-              <Plus className="h-4 w-4" /> {t('project.new')}
-            </button>
+            {isLeader && (
+              <button onClick={() => setCreating(true)} className="flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+                <Plus className="h-4 w-4" /> {t('project.new')}
+              </button>
+            )}
           </div>
           <div className="p-2">
             {projects?.length ? (
@@ -94,13 +104,16 @@ export default function DashboardPage() {
                   <ArrowUpRight className="h-4 w-4 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
                 </Link>
               ))
-            ) : (
+            ) : isLeader ? (
               <EmptyProjects onCreate={() => setCreating(true)} label={t('project.new')} />
+            ) : (
+              <p className="px-4 py-12 text-center text-sm text-muted">{t('common.empty')}</p>
             )}
           </div>
         </Card>
 
-        {/* Workload */}
+        {/* Team workload — leaders only */}
+        {isLeader && (
         <Card className="lg:col-span-2">
           <div className="border-b border-border px-5 py-4">
             <h2 className="font-semibold">{t('dashboard.workload')}</h2>
@@ -128,9 +141,10 @@ export default function DashboardPage() {
             )}
           </div>
         </Card>
+        )}
       </div>
 
-      <CreateProjectDialog open={creating} onOpenChange={setCreating} />
+      {isLeader && <CreateProjectDialog open={creating} onOpenChange={setCreating} />}
     </div>
   );
 }

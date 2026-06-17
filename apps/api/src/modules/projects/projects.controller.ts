@@ -43,7 +43,7 @@ export class ProjectsController {
 
   @Post('projects')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   create(@WorkspaceId() ws: string, @Body() body: CreateProjectBody) {
     return this.projects.create(ws, body);
   }
@@ -55,7 +55,7 @@ export class ProjectsController {
 
   @Patch('projects/:id')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   update(@WorkspaceId() ws: string, @Param('id') id: string, @Body() body: UpdateProjectBody) {
     return this.projects.update(ws, id, body);
   }
@@ -77,14 +77,14 @@ export class ProjectsController {
   // ---- Statuses ----
   @Post('projects/:id/statuses')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   addStatus(@WorkspaceId() ws: string, @Param('id') id: string, @Body() body: CreateStatusBody) {
     return this.projects.addStatus(ws, id, body);
   }
 
   @Patch('projects/:id/statuses/:statusId')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   updateStatus(
     @WorkspaceId() ws: string,
     @Param('id') id: string,
@@ -96,7 +96,7 @@ export class ProjectsController {
 
   @Delete('projects/:id/statuses/:statusId')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   deleteStatus(@WorkspaceId() ws: string, @Param('id') id: string, @Param('statusId') statusId: string) {
     return this.projects.deleteStatus(ws, id, statusId);
   }
@@ -109,14 +109,14 @@ export class ProjectsController {
 
   @Post('projects/:id/sprints')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   createSprint(@WorkspaceId() ws: string, @Param('id') id: string, @Body() body: CreateSprintBody) {
     return this.sprints.create(ws, id, body);
   }
 
   @Patch('projects/:id/sprints/:sprintId')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   updateSprint(
     @WorkspaceId() ws: string,
     @Param('id') id: string,
@@ -128,7 +128,7 @@ export class ProjectsController {
 
   @Delete('projects/:id/sprints/:sprintId')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   deleteSprint(@WorkspaceId() ws: string, @Param('id') id: string, @Param('sprintId') sprintId: string) {
     return this.sprints.remove(ws, id, sprintId);
   }
@@ -141,14 +141,14 @@ export class ProjectsController {
 
   @Post('labels')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   createLabel(@WorkspaceId() ws: string, @Body() body: CreateLabelBody) {
     return this.labels.create(ws, body);
   }
 
   @Delete('labels/:id')
   @UseGuards(RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   deleteLabel(@WorkspaceId() ws: string, @Param('id') id: string) {
     return this.labels.remove(ws, id);
   }

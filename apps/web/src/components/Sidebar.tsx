@@ -92,13 +92,15 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <div className="flex items-center justify-between px-2.5 pb-1 pt-5">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t('nav.projects')}</span>
-          <button
-            onClick={() => setCreating(true)}
-            className="rounded p-0.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
-            aria-label={t('project.new')}
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          {isLeader && (
+            <button
+              onClick={() => setCreating(true)}
+              className="rounded p-0.5 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+              aria-label={t('project.new')}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {projects?.map((p) => {
@@ -121,12 +123,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
         {!projects?.length && (
-          <button
-            onClick={() => setCreating(true)}
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
-          >
-            <Folder className="h-4 w-4" /> {t('project.new')}
-          </button>
+          isLeader ? (
+            <button
+              onClick={() => setCreating(true)}
+              className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+            >
+              <Folder className="h-4 w-4" /> {t('project.new')}
+            </button>
+          ) : (
+            <p className="px-2.5 py-2 text-xs text-muted">{t('common.empty')}</p>
+          )
         )}
       </nav>
 

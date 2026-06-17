@@ -32,7 +32,7 @@ export class SharingController {
 
   @Post('projects/:projectId/import.csv')
   @UseGuards(WorkspaceGuard, RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   import(
     @WorkspaceId() ws: string,
     @CurrentUser() u: RequestUser,
@@ -45,7 +45,7 @@ export class SharingController {
   // ---- Public shares (management) ----
   @Post('shares')
   @UseGuards(WorkspaceGuard, RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   create(
     @WorkspaceId() ws: string,
     @CurrentUser() u: RequestUser,
@@ -62,7 +62,7 @@ export class SharingController {
 
   @Delete('shares/:id')
   @UseGuards(WorkspaceGuard, RolesGuard)
-  @MinRole(WorkspaceRole.MEMBER)
+  @MinRole(WorkspaceRole.ADMIN)
   revoke(@WorkspaceId() ws: string, @Param('id') id: string) {
     return this.service.revokeShare(ws, id);
   }

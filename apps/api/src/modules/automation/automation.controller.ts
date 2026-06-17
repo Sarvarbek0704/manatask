@@ -7,7 +7,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Controller('projects/:projectId/automations')
 @UseGuards(WorkspaceGuard, RolesGuard)
-@MinRole(WorkspaceRole.MEMBER)
+@MinRole(WorkspaceRole.ADMIN)
 export class AutomationController {
   constructor(private service: AutomationService) {}
 
