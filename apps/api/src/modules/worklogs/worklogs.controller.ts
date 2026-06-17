@@ -74,7 +74,7 @@ export class WorkLogsController {
     @Param('id') id: string,
     @Body() body: ReviewWorkLogBody,
   ) {
-    return this.service.review(ws, u.id, id, body.decision);
+    return this.service.review(ws, u.id, id, body.decision, body.note);
   }
 
   @Patch(':id')

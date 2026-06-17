@@ -23,3 +23,14 @@ export class UpdateMemberRoleBody {
   @IsEnum(WorkspaceRole)
   role: WorkspaceRole;
 }
+
+export class UpdateWorkspaceBody {
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+}

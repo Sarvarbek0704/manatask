@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Mail, Copy, Check, UserPlus, Clock } from 'lucide-react';
 import { WorkspaceRole } from '@manatask/shared';
@@ -103,14 +104,14 @@ export default function MembersPage() {
         ) : (
           <div className="divide-y divide-border">
             {members?.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 px-6 py-3.5">
+              <Link key={m.id} href={`/members/${m.user.id}`} className="flex items-center gap-3 px-6 py-3.5 transition-colors hover:bg-surface-2">
                 <Avatar name={m.user.name} url={m.user.avatarUrl} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{m.user.name}</p>
                   <p className="truncate text-xs text-muted">{m.user.email}</p>
                 </div>
                 <Badge variant={ROLE_VARIANT[m.role] ?? 'neutral'} size="md" className="capitalize">{m.role}</Badge>
-              </div>
+              </Link>
             ))}
           </div>
         )}

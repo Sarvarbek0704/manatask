@@ -80,6 +80,15 @@ export class WorkspacesService {
     return toWorkspace(ws);
   }
 
+  async update(workspaceId: string, body: { name?: string; logoUrl?: string }) {
+    const ws = await this.workspaces.findOne({ where: { id: workspaceId } });
+    if (!ws) throw new NotFoundException('Workspace not found.');
+    if (body.name !== undefined) ws.name = body.name.trim();
+    if (body.logoUrl !== undefined) ws.logoUrl = body.logoUrl.trim() || null;
+    await this.workspaces.save(ws);
+    return toWorkspace(ws);
+  }
+
   async listMembers(workspaceId: string) {
     const members = await this.members.find({
       where: { workspaceId },

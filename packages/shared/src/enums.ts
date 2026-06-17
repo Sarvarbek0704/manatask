@@ -64,6 +64,7 @@ export enum NotificationType {
   MENTIONED = 'mentioned',
   INVITED = 'invited',
   WORKLOG_POSTED = 'worklog_posted',
+  WORKLOG_REMINDER = 'worklog_reminder',
   WORKLOG_REVIEWED = 'worklog_reviewed',
 }
 

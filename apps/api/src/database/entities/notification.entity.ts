@@ -16,7 +16,8 @@ export class Notification extends BaseEntity {
   @Column({ type: 'uuid', nullable: true })
   workspaceId: string | null;
 
-  @Column({ type: 'enum', enum: NotificationType })
+  // Stored as varchar (not a PG enum) so new notification types need no enum migration.
+  @Column({ type: 'varchar' })
   type: NotificationType;
 
   @Column()

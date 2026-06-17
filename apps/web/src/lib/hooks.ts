@@ -67,6 +67,35 @@ export function useInvitations() {
   });
 }
 
+export function useUpdateWorkspace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { name?: string; logoUrl?: string }) =>
+      (await api.patch('/workspaces/current', body)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workspaces'] }),
+  });
+}
+
+export function useActivity(page = 1) {
+  return useQuery({
+    queryKey: ['activity', page],
+    queryFn: async () => (await api.get('/activity', { params: { page } })).data as {
+      items: {
+        id: string;
+        action: string;
+        entityType: string;
+        entityId: string;
+        actor: { id: string | null; name: string; avatarUrl: string | null };
+        meta: Record<string, unknown> | null;
+        createdAt: string;
+      }[];
+      total: number;
+      page: number;
+      pageSize: number;
+    },
+  });
+}
+
 // ---- Projects ----
 export function useProjects() {
   return useQuery({
@@ -290,8 +319,8 @@ export function useWorkLog(id?: string) {
 export function useReviewWorkLog() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, decision }: { id: string; decision: 'accept' | 'reject' }) =>
-      (await api.patch<WorkLog>(`/worklogs/${id}/review`, { decision })).data,
+    mutationFn: async ({ id, decision, note }: { id: string; decision: 'accept' | 'reject'; note?: string }) =>
+      (await api.patch<WorkLog>(`/worklogs/${id}/review`, { decision, note })).data,
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ['worklogs'] });
       qc.invalidateQueries({ queryKey: ['worklog', v.id] });

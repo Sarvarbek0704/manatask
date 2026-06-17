@@ -194,6 +194,7 @@ export interface WorkLog {
   status: WorkLogStatus;
   reviewedAt: string | null;
   reviewedByName: string | null;
+  reviewNote: string | null;
   createdAt: string;
 }
 

@@ -57,6 +57,7 @@ export class WorkLogsService {
       status: w.status,
       reviewedAt: w.reviewedAt ? new Date(w.reviewedAt).toISOString() : null,
       reviewedByName: w.reviewedBy?.name ?? null,
+      reviewNote: w.reviewNote ?? null,
       createdAt: new Date(w.createdAt).toISOString(),
     };
   }
@@ -142,12 +143,13 @@ export class WorkLogsService {
   }
 
   /** Accept/reject a work log. Owners/admins only. */
-  async review(workspaceId: string, reviewerId: string, id: string, decision: 'accept' | 'reject') {
+  async review(workspaceId: string, reviewerId: string, id: string, decision: 'accept' | 'reject', note?: string) {
     const log = await this.logs.findOne({ where: { id, workspaceId }, relations: { user: true, project: true } });
     if (!log) throw new NotFoundException('Work log not found.');
     log.status = decision === 'accept' ? WorkLogStatus.ACCEPTED : WorkLogStatus.REJECTED;
     log.reviewedById = reviewerId;
     log.reviewedAt = new Date();
+    log.reviewNote = sanitizeRichText(note) ?? null;
     await this.logs.save(log);
     const full = await this.logs.findOne({ where: { id }, relations: { user: true, project: true, reviewedBy: true } });
     const dto = this.toDto(full!);
@@ -161,7 +163,7 @@ export class WorkLogsService {
         workspaceId,
         type: NotificationType.WORKLOG_REVIEWED,
         title: decision === 'accept' ? `Work accepted (${accepted}/${(await this.getOrCreateChallenge(workspaceId)).target})` : 'Work needs revision',
-        body: log.title,
+        body: note?.trim() ? note.trim().slice(0, 200) : log.title,
         data: { workLogId: log.id, status: log.status },
       });
     }
@@ -275,6 +277,13 @@ export class WorkLogsService {
     if (body.minutes !== undefined) log.minutes = body.minutes;
     if (body.projectId !== undefined) log.projectId = body.projectId;
     if (body.workedOn !== undefined) log.workedOn = body.workedOn;
+    // Editing a reviewed log sends it back for review.
+    if (log.status !== WorkLogStatus.PENDING) {
+      log.status = WorkLogStatus.PENDING;
+      log.reviewedById = null;
+      log.reviewedAt = null;
+      log.reviewNote = null;
+    }
     await this.logs.save(log);
     const full = await this.logs.findOne({ where: { id }, relations: { project: true } });
     return this.toDto(full!);

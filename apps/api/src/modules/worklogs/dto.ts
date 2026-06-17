@@ -39,6 +39,7 @@ export class WorkLogQuery {
 
 export class ReviewWorkLogBody {
   @IsIn(['accept', 'reject']) decision: 'accept' | 'reject';
+  @IsOptional() @IsString() note?: string;
 }
 
 export class UpsertChallengeBody {

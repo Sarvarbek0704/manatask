@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { WorkspaceRole } from '@manatask/shared';
 import { WorkspacesService } from './workspaces.service';
-import { CreateWorkspaceBody, InviteBody, UpdateMemberRoleBody } from './dto';
+import { CreateWorkspaceBody, InviteBody, UpdateMemberRoleBody, UpdateWorkspaceBody } from './dto';
 import {
   CurrentUser,
   RequestUser,
@@ -46,6 +46,13 @@ export class WorkspacesController {
   @UseGuards(WorkspaceGuard)
   current(@WorkspaceId() workspaceId: string) {
     return this.service.getOne(workspaceId);
+  }
+
+  @Patch('current')
+  @UseGuards(WorkspaceGuard, RolesGuard)
+  @MinRole(WorkspaceRole.OWNER)
+  updateWorkspace(@WorkspaceId() workspaceId: string, @Body() body: UpdateWorkspaceBody) {
+    return this.service.update(workspaceId, body);
   }
 
   @Get('current/members')

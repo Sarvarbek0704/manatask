@@ -9,6 +9,7 @@ import {
   BarChart3,
   NotebookPen,
   Flame,
+  ScrollText,
   Plus,
   LogOut,
   Search,
@@ -51,9 +52,10 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/worklog', label: t('nav.worklog'), icon: NotebookPen },
     { href: '/challenge', label: t('nav.challenge'), icon: Flame },
-    // Analytics is management-only.
+    // Analytics & audit are management-only.
     ...(isLeader ? [{ href: '/analytics', label: t('nav.analytics'), icon: BarChart3 }] : []),
     { href: '/members', label: t('nav.members'), icon: Users },
+    ...(isLeader ? [{ href: '/audit', label: t('nav.audit'), icon: ScrollText }] : []),
   ];
 
   const logout = async () => {

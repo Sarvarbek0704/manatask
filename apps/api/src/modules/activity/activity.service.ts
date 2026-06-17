@@ -27,16 +27,33 @@ export class ActivityService {
       order: { createdAt: 'DESC' },
       take: 50,
     });
-    return items.map((a) => ({
+    return items.map((a) => this.toDto(a));
+  }
+
+  /** Workspace-wide audit feed (admins/owners). */
+  async forWorkspace(workspaceId: string, page = 1, pageSize = 40) {
+    const [items, total] = await this.repo.findAndCount({
+      where: { workspaceId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return { items: items.map((a) => this.toDto(a)), total, page, pageSize };
+  }
+
+  private toDto(a: Activity) {
+    return {
       id: a.id,
       action: a.action,
+      entityType: a.entityType,
+      entityId: a.entityId,
       actor: {
-        id: a.actor.id,
-        name: a.actor.name,
-        avatarUrl: a.actor.avatarUrl ?? null,
+        id: a.actor?.id ?? null,
+        name: a.actor?.name ?? 'Unknown',
+        avatarUrl: a.actor?.avatarUrl ?? null,
       },
       meta: a.meta,
       createdAt: a.createdAt.toISOString(),
-    }));
+    };
   }
 }

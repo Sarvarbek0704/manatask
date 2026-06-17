@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sun, Moon, Monitor, Monitor as Device, Trash2, LogOut, Check, KeyRound, AlertCircle, Lock } from 'lucide-react';
+import { Sun, Moon, Monitor, Monitor as Device, Trash2, LogOut, Check, KeyRound, AlertCircle, Lock, Building2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { api, apiErrorMessage } from '@/lib/api';
-import { useAuth } from '@/lib/store';
+import { useAuth, useWorkspace } from '@/lib/store';
+import { useMyWorkspaces, useUpdateWorkspace } from '@/lib/hooks';
 import { useI18n, LOCALES } from '@/lib/i18n';
 import type { Locale } from '@manatask/shared';
 import { Card, Separator, Spinner } from '@/components/ui/primitives';
@@ -77,6 +78,8 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{t('nav.settings')}</h1>
         <p className="mt-1 text-sm text-muted">Manage your profile, appearance and active sessions.</p>
       </div>
+
+      <WorkspaceSection />
 
       <Section title="Profile">
         <div className="flex items-center gap-4">
@@ -169,6 +172,58 @@ export default function SettingsPage() {
         </Button>
       </Section>
     </div>
+  );
+}
+
+function WorkspaceSection() {
+  const { t } = useI18n();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
+  const update = useUpdateWorkspace();
+  const ws = workspaces?.find((w) => w.id === currentWorkspaceId);
+  const isOwner = (ws as any)?.role === 'owner';
+  const [name, setName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    if (ws) { setName(ws.name); setLogoUrl(ws.logoUrl ?? ''); }
+  }, [ws]);
+
+  if (!ws || !isOwner) return null;
+
+  const save = async () => {
+    setDone(false);
+    await update.mutateAsync({ name: name.trim(), logoUrl: logoUrl.trim() });
+    setDone(true);
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
+        <Building2 className="h-[18px] w-[18px] text-muted" />
+        <h2 className="font-semibold">{t('settings.workspace')}</h2>
+      </div>
+      <div className="space-y-4 p-6">
+        <div className="flex items-center gap-4">
+          <Avatar name={name} url={logoUrl || null} size="lg" className="h-14 w-14 rounded-xl text-base" />
+          <div className="flex-1 space-y-3">
+            <div>
+              <Label htmlFor="ws-name">{t('auth.workspaceName')}</Label>
+              <Input id="ws-name" value={name} onChange={(e) => setName(e.target.value)} className="max-w-sm" />
+            </div>
+            <div>
+              <Label htmlFor="ws-logo">{t('settings.logoUrl')}</Label>
+              <Input id="ws-logo" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…" className="max-w-sm" />
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button onClick={save} loading={update.isPending} disabled={!name.trim()}>{t('common.save')}</Button>
+          {done && <span className="inline-flex items-center gap-1 text-sm text-success"><Check className="h-4 w-4" /> {t('settings.pwUpdated')}</span>}
+        </div>
+      </div>
+    </Card>
   );
 }
 

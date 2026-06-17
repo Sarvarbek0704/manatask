@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InvitationStatus, NotificationType, StatusCategory } from '@manatask/shared';
-import { Task, Invitation } from '../../database/entities';
+import { Task, Invitation, Challenge, WorkLog, WorkspaceMember } from '../../database/entities';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SessionsService } from '../auth/sessions.service';
 
@@ -14,9 +14,44 @@ export class MaintenanceService {
   constructor(
     @InjectRepository(Task) private tasks: Repository<Task>,
     @InjectRepository(Invitation) private invitations: Repository<Invitation>,
+    @InjectRepository(Challenge) private challenges: Repository<Challenge>,
+    @InjectRepository(WorkLog) private workLogs: Repository<WorkLog>,
+    @InjectRepository(WorkspaceMember) private members: Repository<WorkspaceMember>,
     private notifications: NotificationsService,
     private sessions: SessionsService,
   ) {}
+
+  /**
+   * Remind members who haven't logged today's work yet (within an active
+   * challenge window). Runs each evening.
+   */
+  @Cron('0 17 * * *', { name: 'worklog-reminder' })
+  async worklogReminder() {
+    const today = new Date().toISOString().slice(0, 10);
+    const active = await this.challenges.find({ where: { active: true } });
+    let sent = 0;
+    for (const c of active) {
+      if (today < c.startDate || today > c.endDate) continue;
+      const members = await this.members.find({ where: { workspaceId: c.workspaceId } });
+      const logged = await this.workLogs.find({
+        where: { workspaceId: c.workspaceId, workedOn: today },
+        select: { userId: true },
+      });
+      const loggedSet = new Set(logged.map((l) => l.userId));
+      for (const m of members) {
+        if (loggedSet.has(m.userId)) continue;
+        await this.notifications.create(m.userId, {
+          workspaceId: c.workspaceId,
+          type: NotificationType.WORKLOG_REMINDER,
+          title: "Log today's work",
+          body: "You haven't logged your work for the challenge today.",
+          data: {},
+        });
+        sent++;
+      }
+    }
+    if (sent) this.logger.log(`Sent ${sent} work-log reminders`);
+  }
 
   /** Notify assignees about tasks due within the next 24h. Runs every morning. */
   @Cron('0 8 * * *', { name: 'due-soon' })

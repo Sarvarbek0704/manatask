@@ -66,4 +66,8 @@ export class WorkLog extends BaseEntity {
 
   @Column({ type: 'timestamptz', nullable: true })
   reviewedAt: Date | null;
+
+  /** Optional reviewer comment shown to the worker (esp. on rejection). */
+  @Column({ type: 'text', nullable: true })
+  reviewNote: string | null;
 }

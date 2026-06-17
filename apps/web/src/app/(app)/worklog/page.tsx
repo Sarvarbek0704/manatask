@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, isToday, isYesterday, parseISO, startOfWeek } from 'date-fns';
-import { Send, Clock, Trash2, NotebookPen, Filter, Check, X, ChevronRight } from 'lucide-react';
+import { Send, Clock, Trash2, NotebookPen, Filter, Check, X, ChevronRight, MessageSquare } from 'lucide-react';
 import { RT_EVENTS, WorkLogStatus } from '@manatask/shared';
 import type { WorkLog } from '@manatask/shared';
 import {
@@ -25,6 +25,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea, Label } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { cn } from '@/lib/cn';
 
 function fmtMinutes(m: number | null) {
@@ -275,6 +276,8 @@ function WorkLogItem({ log, canDelete, isLeader }: { log: WorkLog; canDelete: bo
   const review = useReviewWorkLog();
   const mins = fmtMinutes(log.minutes);
   const badge = STATUS_BADGE[log.status] ?? STATUS_BADGE.pending;
+  const [rejecting, setRejecting] = useState(false);
+  const [note, setNote] = useState('');
 
   return (
     <Card className="group p-4">
@@ -319,19 +322,52 @@ function WorkLogItem({ log, canDelete, isLeader }: { log: WorkLog; canDelete: bo
             </Link>
           </div>
 
+          {/* Reviewer's note (esp. on rejection) */}
+          {log.reviewNote && (
+            <div className={cn(
+              'mt-2.5 flex gap-2 rounded-lg border px-3 py-2 text-sm',
+              log.status === 'rejected' ? 'border-danger/20 bg-danger/8 text-danger' : 'border-border bg-surface-2/60 text-foreground/85',
+            )}>
+              <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span className="whitespace-pre-wrap">{log.reviewNote}</span>
+            </div>
+          )}
+
           {/* Owner/admin review actions */}
           {isLeader && log.status === WorkLogStatus.PENDING && (
             <div className="mt-3 flex gap-2 border-t border-border pt-3">
               <Button size="sm" variant="primary" loading={review.isPending} onClick={() => review.mutate({ id: log.id, decision: 'accept' })}>
                 <Check className="h-4 w-4" /> {t('worklog.accept')}
               </Button>
-              <Button size="sm" variant="outline" className="text-danger" onClick={() => review.mutate({ id: log.id, decision: 'reject' })}>
+              <Button size="sm" variant="outline" className="text-danger" onClick={() => { setNote(''); setRejecting(true); }}>
                 <X className="h-4 w-4" /> {t('worklog.reject')}
               </Button>
             </div>
           )}
         </div>
       </div>
+
+      <Dialog open={rejecting} onOpenChange={setRejecting}>
+        <DialogContent size="md">
+          <DialogHeader>
+            <DialogTitle>{t('worklog.reject')}</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="space-y-2">
+            <Label htmlFor={`note-${log.id}`}>{t('worklog.rejectReason')}</Label>
+            <Textarea id={`note-${log.id}`} value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder={t('worklog.rejectReasonPlaceholder')} autoFocus />
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setRejecting(false)}>{t('task.cancel')}</Button>
+            <Button
+              variant="danger"
+              loading={review.isPending}
+              onClick={() => review.mutate({ id: log.id, decision: 'reject', note: note.trim() || undefined }, { onSuccess: () => setRejecting(false) })}
+            >
+              {t('worklog.reject')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
