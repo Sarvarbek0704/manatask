@@ -22,6 +22,7 @@ import {
   RegisterBody,
   VerifyEmailBody,
   VerifyOtpBody,
+  ChangePasswordBody,
   ForgotPasswordBody,
   ResetPasswordBody,
 } from './dto';
@@ -91,6 +92,14 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: RequestUser) {
     return user;
+  }
+
+  @Post('change-password')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(200)
+  async changePassword(@CurrentUser() user: RequestUser, @Body() body: ChangePasswordBody) {
+    await this.auth.changePassword(user.id, body.currentPassword, body.newPassword);
+    return { ok: true };
   }
 
   // ---- Email verification ----

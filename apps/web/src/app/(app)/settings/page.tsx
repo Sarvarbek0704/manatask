@@ -3,15 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sun, Moon, Monitor, Monitor as Device, Trash2, LogOut, Check } from 'lucide-react';
+import { Sun, Moon, Monitor, Monitor as Device, Trash2, LogOut, Check, KeyRound, AlertCircle, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { api } from '@/lib/api';
+import { api, apiErrorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/store';
 import { useI18n, LOCALES } from '@/lib/i18n';
 import type { Locale } from '@manatask/shared';
 import { Card, Separator, Spinner } from '@/components/ui/primitives';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Input, Label, PasswordInput } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/cn';
 
@@ -133,6 +133,8 @@ export default function SettingsPage() {
         </div>
       </Section>
 
+      <ChangePasswordSection />
+
       <Section title="Active sessions" description="Devices currently signed in to your account.">
         {isLoading ? (
           <div className="flex justify-center py-4"><Spinner /></div>
@@ -167,5 +169,71 @@ export default function SettingsPage() {
         </Button>
       </Section>
     </div>
+  );
+}
+
+function ChangePasswordSection() {
+  const { t } = useI18n();
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setDone(false);
+    if (next.length < 8) { setError(t('settings.pwMin')); return; }
+    if (next !== confirm) { setError(t('settings.pwMismatch')); return; }
+    setLoading(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword: current, newPassword: next });
+      setDone(true);
+      setCurrent(''); setNext(''); setConfirm('');
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
+        <KeyRound className="h-[18px] w-[18px] text-muted" />
+        <h2 className="font-semibold">{t('settings.changePassword')}</h2>
+      </div>
+      <form onSubmit={submit} className="space-y-4 p-6">
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-danger/20 bg-danger/8 px-3 py-2 text-sm text-danger">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{error}</span>
+          </div>
+        )}
+        {done && (
+          <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm text-success">
+            <Check className="h-4 w-4" /> {t('settings.pwUpdated')}
+          </div>
+        )}
+        <div className="max-w-sm space-y-3">
+          <div>
+            <Label htmlFor="cur-pw">{t('settings.currentPw')}</Label>
+            <PasswordInput id="cur-pw" leftIcon={Lock} value={current} onChange={(e) => setCurrent(e.target.value)} required autoComplete="current-password" />
+          </div>
+          <div>
+            <Label htmlFor="new-pw">{t('settings.newPw')}</Label>
+            <PasswordInput id="new-pw" leftIcon={Lock} value={next} onChange={(e) => setNext(e.target.value)} required minLength={8} autoComplete="new-password" />
+          </div>
+          <div>
+            <Label htmlFor="conf-pw">{t('settings.confirmPw')}</Label>
+            <PasswordInput id="conf-pw" leftIcon={Lock} value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={8} autoComplete="new-password" />
+          </div>
+        </div>
+        <Button type="submit" loading={loading} disabled={!current || !next || !confirm}>
+          {t('settings.changePassword')}
+        </Button>
+      </form>
+    </Card>
   );
 }

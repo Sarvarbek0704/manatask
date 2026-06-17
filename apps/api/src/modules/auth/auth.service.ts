@@ -149,6 +149,23 @@ export class AuthService {
     await this.sessions.revokeAll(userId);
   }
 
+  /** Change password while logged in (verifies the current password). */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.users
+      .createQueryBuilder('u')
+      .addSelect('u.passwordHash')
+      .where('u.id = :id', { id: userId })
+      .getOne();
+    if (!user) throw new NotFoundException('User not found.');
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('No password set. Use “forgot password” to create one.');
+    }
+    if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Current password is incorrect.');
+    }
+    await this.users.update({ id: userId }, { passwordHash: await bcrypt.hash(newPassword, 10) });
+  }
+
   private async respond(user: User, ctx: SessionContext): Promise<AuthResponse> {
     const tokens = await this.sessions.createForLogin(user, ctx);
     return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, user: toUserPublic(user)! };
