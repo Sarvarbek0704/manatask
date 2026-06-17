@@ -60,9 +60,10 @@ export function useInvite() {
   });
 }
 
-export function useInvitations() {
+export function useInvitations(enabled = true) {
   return useQuery({
     queryKey: ['invitations'],
+    enabled,
     queryFn: async () => (await api.get('/workspaces/current/invitations')).data,
   });
 }

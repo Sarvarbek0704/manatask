@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Mail, Copy, Check, UserPlus, Clock } from 'lucide-react';
 import { WorkspaceRole } from '@manatask/shared';
-import { useMembers, useInvitations, useInvite } from '@/lib/hooks';
+import { useMembers, useInvitations, useInvite, useMyWorkspaces } from '@/lib/hooks';
+import { useWorkspace } from '@/lib/store';
 import { apiErrorMessage } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 import { Card, Badge, Separator, Spinner } from '@/components/ui/primitives';
@@ -22,8 +23,13 @@ const ROLE_VARIANT: Record<string, 'accent' | 'success' | 'neutral' | 'warning'>
 
 export default function MembersPage() {
   const { t } = useI18n();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
+  const myRole = workspaces?.find((w) => w.id === currentWorkspaceId)?.role;
+  const isLeader = myRole === 'owner' || myRole === 'admin';
+
   const { data: members, isLoading } = useMembers();
-  const { data: invitations } = useInvitations();
+  const { data: invitations } = useInvitations(isLeader);
   const invite = useInvite();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<WorkspaceRole>(WorkspaceRole.MEMBER);
@@ -50,6 +56,7 @@ export default function MembersPage() {
         <p className="mt-1 text-sm text-muted">Invite teammates and manage their roles.</p>
       </div>
 
+      {isLeader && (
       <Card>
         <div className="flex items-center gap-2 border-b border-border px-6 py-4">
           <UserPlus className="h-[18px] w-[18px] text-muted" />
@@ -94,6 +101,7 @@ export default function MembersPage() {
           )}
         </div>
       </Card>
+      )}
 
       <Card>
         <div className="border-b border-border px-6 py-4">
