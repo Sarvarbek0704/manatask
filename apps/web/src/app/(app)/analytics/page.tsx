@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
 import {
   ResponsiveContainer,
@@ -26,7 +27,8 @@ import {
   Clock,
 } from 'lucide-react';
 import { StatusCategory, TaskPriority } from '@manatask/shared';
-import { useAnalytics, useProjects, useVelocity } from '@/lib/hooks';
+import { useAnalytics, useProjects, useVelocity, useMyWorkspaces } from '@/lib/hooks';
+import { useWorkspace } from '@/lib/store';
 import { useChartColors } from '@/lib/chart-colors';
 import { useI18n } from '@/lib/i18n';
 import { Card, Skeleton } from '@/components/ui/primitives';
@@ -68,6 +70,17 @@ const tooltipStyle = {
 export default function AnalyticsPage() {
   const { t } = useI18n();
   const c = useChartColors();
+  const router = useRouter();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
+  const role = workspaces?.find((w) => w.id === currentWorkspaceId)?.role;
+  const isLeader = role === 'owner' || role === 'admin';
+
+  // Analytics is management-only — bounce workers back to the dashboard.
+  useEffect(() => {
+    if (workspaces && !isLeader) router.replace('/dashboard');
+  }, [workspaces, isLeader, router]);
+
   const { data: projects } = useProjects();
   const [projectId, setProjectId] = useState('all');
   const [days, setDays] = useState(30);

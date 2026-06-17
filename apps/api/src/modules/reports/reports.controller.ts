@@ -1,8 +1,12 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { WorkspaceRole } from '@manatask/shared';
 import { ReportsService } from './reports.service';
-import { WorkspaceId } from '../../common/decorators';
+import { WorkspaceId, MinRole } from '../../common/decorators';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
+// Team-wide analytics is management-only — workers don't see it. (Dashboard
+// stays open since it's the shared landing overview.)
 @Controller('reports')
 @UseGuards(WorkspaceGuard)
 export class ReportsController {
@@ -14,6 +18,8 @@ export class ReportsController {
   }
 
   @Get('time')
+  @UseGuards(RolesGuard)
+  @MinRole(WorkspaceRole.ADMIN)
   time(
     @WorkspaceId() ws: string,
     @Query('projectId') projectId?: string,
@@ -24,16 +30,22 @@ export class ReportsController {
   }
 
   @Get('burndown')
+  @UseGuards(RolesGuard)
+  @MinRole(WorkspaceRole.ADMIN)
   burndown(@WorkspaceId() ws: string, @Query('sprintId') sprintId: string) {
     return this.service.burndown(ws, sprintId);
   }
 
   @Get('velocity')
+  @UseGuards(RolesGuard)
+  @MinRole(WorkspaceRole.ADMIN)
   velocity(@WorkspaceId() ws: string, @Query('projectId') projectId: string) {
     return this.service.velocity(ws, projectId);
   }
 
   @Get('analytics')
+  @UseGuards(RolesGuard)
+  @MinRole(WorkspaceRole.ADMIN)
   analytics(
     @WorkspaceId() ws: string,
     @Query('projectId') projectId?: string,

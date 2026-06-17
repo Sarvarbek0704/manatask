@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
-import { useAuth } from '@/lib/store';
-import { useProjects } from '@/lib/hooks';
+import { useAuth, useWorkspace } from '@/lib/store';
+import { useProjects, useMyWorkspaces } from '@/lib/hooks';
 import { api } from '@/lib/api';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { CreateProjectDialog } from './CreateProjectDialog';
@@ -38,15 +38,21 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useI18n();
   const pathname = usePathname();
   const { data: projects } = useProjects();
+  const { data: workspaces } = useMyWorkspaces();
+  const { currentWorkspaceId } = useWorkspace();
   const { user, clear } = useAuth();
   const [creating, setCreating] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  const isLeader = workspaces?.find((w) => w.id === currentWorkspaceId)?.role === 'owner'
+    || workspaces?.find((w) => w.id === currentWorkspaceId)?.role === 'admin';
 
   const nav = [
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/worklog', label: t('nav.worklog'), icon: NotebookPen },
     { href: '/challenge', label: t('nav.challenge'), icon: Flame },
-    { href: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
+    // Analytics is management-only.
+    ...(isLeader ? [{ href: '/analytics', label: t('nav.analytics'), icon: BarChart3 }] : []),
     { href: '/members', label: t('nav.members'), icon: Users },
   ];
 
