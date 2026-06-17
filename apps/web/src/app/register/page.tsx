@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/store';
 import { useI18n } from '@/lib/i18n';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Input, Label, PasswordInput } from '@/components/ui/input';
 
 export default function RegisterPage() {
   const { t, locale } = useI18n();
@@ -61,24 +61,30 @@ export default function RegisterPage() {
       )}
 
       <form onSubmit={submit} className="space-y-4">
-        {fields.map((f) => (
-          <div key={f.key}>
-            <Label htmlFor={f.key}>{f.label}</Label>
-            <div className="relative">
-              <f.icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              <Input
+        {fields.map((f) =>
+          f.type === 'password' ? (
+            <div key={f.key}>
+              <Label htmlFor={f.key}>{f.label}</Label>
+              <PasswordInput
                 id={f.key}
-                type={f.type}
+                leftIcon={f.icon}
                 value={form[f.key]}
                 onChange={set(f.key)}
                 required
-                minLength={f.key === 'password' ? 8 : undefined}
-                className="pl-9"
+                minLength={8}
                 placeholder={f.placeholder}
               />
             </div>
-          </div>
-        ))}
+          ) : (
+            <div key={f.key}>
+              <Label htmlFor={f.key}>{f.label}</Label>
+              <div className="relative">
+                <f.icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                <Input id={f.key} type={f.type} value={form[f.key]} onChange={set(f.key)} required className="pl-9" placeholder={f.placeholder} />
+              </div>
+            </div>
+          ),
+        )}
         <Button type="submit" size="lg" className="w-full" loading={loading}>
           {t('auth.register')}
           {!loading && <ArrowRight className="h-4 w-4" />}

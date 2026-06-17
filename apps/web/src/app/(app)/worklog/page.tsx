@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, isToday, isYesterday, parseISO, startOfWeek } from 'date-fns';
-import { Send, Clock, Trash2, NotebookPen, Filter } from 'lucide-react';
-import { RT_EVENTS } from '@manatask/shared';
+import { Send, Clock, Trash2, NotebookPen, Filter, Check, X, ChevronRight } from 'lucide-react';
+import { RT_EVENTS, WorkLogStatus } from '@manatask/shared';
 import type { WorkLog } from '@manatask/shared';
 import {
   useWorkLogs,
   useCreateWorkLog,
   useDeleteWorkLog,
+  useReviewWorkLog,
   useWorkLogSummary,
   useProjects,
   useMembers,
@@ -18,7 +20,7 @@ import {
 import { useAuth, useWorkspace } from '@/lib/store';
 import { getSocket } from '@/lib/socket';
 import { useI18n } from '@/lib/i18n';
-import { Card, Skeleton } from '@/components/ui/primitives';
+import { Card, Skeleton, Badge } from '@/components/ui/primitives';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input, Textarea, Label } from '@/components/ui/input';
@@ -142,7 +144,12 @@ export default function WorkLogPage() {
                   </div>
                   <div className="space-y-3">
                     {items.map((w) => (
-                      <WorkLogItem key={w.id} log={w} canDelete={w.author.id === user?.id || isLeader} />
+                      <WorkLogItem
+                        key={w.id}
+                        log={w}
+                        canDelete={w.author.id === user?.id || isLeader}
+                        isLeader={isLeader}
+                      />
                     ))}
                   </div>
                 </div>
@@ -256,9 +263,19 @@ function Composer({ projects }: { projects: { id: string; name: string; color: s
   );
 }
 
-function WorkLogItem({ log, canDelete }: { log: any; canDelete: boolean }) {
+const STATUS_BADGE: Record<string, { variant: 'success' | 'warning' | 'danger'; key: string }> = {
+  accepted: { variant: 'success', key: 'worklog.accepted' },
+  pending: { variant: 'warning', key: 'worklog.pending' },
+  rejected: { variant: 'danger', key: 'worklog.rejected' },
+};
+
+function WorkLogItem({ log, canDelete, isLeader }: { log: WorkLog; canDelete: boolean; isLeader: boolean }) {
+  const { t } = useI18n();
   const del = useDeleteWorkLog();
+  const review = useReviewWorkLog();
   const mins = fmtMinutes(log.minutes);
+  const badge = STATUS_BADGE[log.status] ?? STATUS_BADGE.pending;
+
   return (
     <Card className="group p-4">
       <div className="flex gap-3">
@@ -267,6 +284,7 @@ function WorkLogItem({ log, canDelete }: { log: any; canDelete: boolean }) {
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">{log.author.name}</span>
             <span className="text-xs text-muted">{format(parseISO(log.createdAt), 'HH:mm')}</span>
+            <Badge variant={badge.variant} className="ml-1">{t(badge.key)}</Badge>
             {canDelete && (
               <button
                 onClick={() => del.mutate(log.id)}
@@ -277,8 +295,10 @@ function WorkLogItem({ log, canDelete }: { log: any; canDelete: boolean }) {
               </button>
             )}
           </div>
-          <p className="mt-0.5 font-medium text-foreground">{log.title}</p>
-          {log.body && <p className="mt-1 whitespace-pre-wrap text-sm text-foreground/85">{log.body}</p>}
+          <Link href={`/worklog/${log.id}`} className="mt-0.5 block font-medium text-foreground hover:text-accent">
+            {log.title}
+          </Link>
+          {log.body && <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-foreground/85">{log.body}</p>}
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             {log.projectName && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-medium">
@@ -291,7 +311,25 @@ function WorkLogItem({ log, canDelete }: { log: any; canDelete: boolean }) {
                 <Clock className="h-3 w-3" /> {mins}
               </span>
             )}
+            {log.reviewedByName && log.status !== 'pending' && (
+              <span className="text-[11px] text-muted">{t('worklog.reviewedBy')} {log.reviewedByName}</span>
+            )}
+            <Link href={`/worklog/${log.id}`} className="ml-auto inline-flex items-center gap-0.5 text-[11px] font-medium text-muted hover:text-accent">
+              {t('worklog.details')} <ChevronRight className="h-3 w-3" />
+            </Link>
           </div>
+
+          {/* Owner/admin review actions */}
+          {isLeader && log.status === WorkLogStatus.PENDING && (
+            <div className="mt-3 flex gap-2 border-t border-border pt-3">
+              <Button size="sm" variant="primary" loading={review.isPending} onClick={() => review.mutate({ id: log.id, decision: 'accept' })}>
+                <Check className="h-4 w-4" /> {t('worklog.accept')}
+              </Button>
+              <Button size="sm" variant="outline" className="text-danger" onClick={() => review.mutate({ id: log.id, decision: 'reject' })}>
+                <X className="h-4 w-4" /> {t('worklog.reject')}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>

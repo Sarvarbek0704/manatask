@@ -17,14 +17,15 @@
     --foreground: 224 32% 12%;
     --muted: 220 9% 46%;
 
-    --accent: 243 75% 59%;
-    --accent-hover: 243 62% 52%;
-    --accent-soft: 243 100% 96%;
+    /* Brand teal — matches the mana design system (#138067) */
+    --accent: 166 74% 29%;
+    --accent-hover: 163 77% 24%;
+    --accent-soft: 156 60% 95%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 64% 38%;
-    --warning: 32 90% 45%;
-    --danger: 0 70% 50%;
+    --success: 142 72% 29%;
+    --warning: 28 89% 37%;
+    --danger: 0 72% 51%;
 
     --shadow-color: 224 40% 30%;
     --radius: 0.7rem;
@@ -44,10 +45,11 @@
     --foreground: 213 27% 92%;
     --muted: 218 11% 60%;
 
-    --accent: 243 82% 70%;
-    --accent-hover: 243 82% 76%;
-    --accent-soft: 243 40% 18%;
-    --accent-foreground: 224 40% 8%;
+    /* Brighter teal for dark surfaces (#2cd4ac) */
+    --accent: 166 64% 50%;
+    --accent-hover: 166 70% 60%;
+    --accent-soft: 167 42% 16%;
+    --accent-foreground: 165 80% 8%;
 
     --success: 142 58% 52%;
     --warning: 32 90% 58%;

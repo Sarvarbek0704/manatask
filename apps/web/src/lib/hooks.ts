@@ -15,6 +15,8 @@ import type {
   WorkLog,
   WorkLogSummary,
   CreateWorkLogDto,
+  Challenge,
+  ChallengeProgress,
   Paginated,
   CreateTaskDto,
   UpdateTaskDto,
@@ -273,6 +275,56 @@ export function useDeleteWorkLog() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['worklogs'] });
       qc.invalidateQueries({ queryKey: ['worklog-summary'] });
+    },
+  });
+}
+
+export function useWorkLog(id?: string) {
+  return useQuery({
+    queryKey: ['worklog', id],
+    enabled: !!id,
+    queryFn: async () => (await api.get<WorkLog>(`/worklogs/${id}`)).data,
+  });
+}
+
+export function useReviewWorkLog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, decision }: { id: string; decision: 'accept' | 'reject' }) =>
+      (await api.patch<WorkLog>(`/worklogs/${id}/review`, { decision })).data,
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['worklogs'] });
+      qc.invalidateQueries({ queryKey: ['worklog', v.id] });
+      qc.invalidateQueries({ queryKey: ['challenge-progress'] });
+    },
+  });
+}
+
+export function useChallenge() {
+  return useQuery({
+    queryKey: ['challenge'],
+    queryFn: async () => (await api.get<Challenge>('/worklogs/challenge')).data,
+  });
+}
+
+export function useChallengeProgress(userId?: string) {
+  return useQuery({
+    queryKey: ['challenge-progress', userId ?? 'me'],
+    queryFn: async () =>
+      (await api.get<ChallengeProgress>('/worklogs/progress', {
+        params: userId ? { userId } : {},
+      })).data,
+  });
+}
+
+export function useUpsertChallenge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Partial<Challenge>) =>
+      (await api.patch<Challenge>('/worklogs/challenge', body)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['challenge'] });
+      qc.invalidateQueries({ queryKey: ['challenge-progress'] });
     },
   });
 }

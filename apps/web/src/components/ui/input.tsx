@@ -1,6 +1,7 @@
 'use client';
 
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
+import { Eye, EyeOff, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
@@ -36,6 +37,37 @@ export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttrib
   ),
 );
 Textarea.displayName = 'Textarea';
+
+/** Password field with a left icon and a show/hide toggle. */
+export const PasswordInput = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement> & { leftIcon?: LucideIcon }
+>(({ className, leftIcon: Icon, ...props }, ref) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      {Icon && (
+        <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+      )}
+      <Input
+        ref={ref}
+        type={show ? 'text' : 'password'}
+        className={cn(Icon && 'pl-9', 'pr-10', className)}
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        tabIndex={-1}
+        aria-label={show ? 'Hide password' : 'Show password'}
+        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted transition-colors hover:text-foreground"
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+});
+PasswordInput.displayName = 'PasswordInput';
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (

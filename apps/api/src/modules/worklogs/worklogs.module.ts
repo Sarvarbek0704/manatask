@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkLog, WorkspaceMember } from '../../database/entities';
+import { WorkLog, WorkspaceMember, Challenge } from '../../database/entities';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WorkLogsService } from './worklogs.service';
 import { WorkLogsController } from './worklogs.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WorkLog, WorkspaceMember]), NotificationsModule],
+  imports: [TypeOrmModule.forFeature([WorkLog, WorkspaceMember, Challenge]), NotificationsModule],
   controllers: [WorkLogsController],
   providers: [WorkLogsService],
 })

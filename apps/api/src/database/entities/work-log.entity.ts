@@ -1,4 +1,5 @@
 import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { WorkLogStatus } from '@manatask/shared';
 import { BaseEntity } from './base.entity';
 import { Workspace } from './workspace.entity';
 import { User } from './user.entity';
@@ -51,4 +52,18 @@ export class WorkLog extends BaseEntity {
   /** The day the work was done. */
   @Column({ type: 'date' })
   workedOn: string;
+
+  /** Review status — owners/admins accept or reject; accepted days count toward the challenge. */
+  @Column({ type: 'enum', enum: WorkLogStatus, default: WorkLogStatus.PENDING })
+  status: WorkLogStatus;
+
+  @Column({ type: 'uuid', nullable: true })
+  reviewedById: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'reviewedById' })
+  reviewedBy: User | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  reviewedAt: Date | null;
 }

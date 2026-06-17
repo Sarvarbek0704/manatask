@@ -11,7 +11,7 @@ import { useI18n } from '@/lib/i18n';
 import { AuthShell } from '@/components/AuthShell';
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Input, Label, PasswordInput } from '@/components/ui/input';
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -66,10 +66,7 @@ export default function LoginPage() {
               Forgot?
             </Link>
           </div>
-          <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="pl-9" placeholder="••••••••" />
-          </div>
+          <PasswordInput id="password" leftIcon={Lock} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" />
         </div>
         <Button type="submit" size="lg" className="w-full" loading={loading}>
           {t('auth.login')}

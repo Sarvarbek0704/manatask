@@ -8,6 +8,7 @@ import {
   Users,
   BarChart3,
   NotebookPen,
+  Flame,
   Plus,
   LogOut,
   Search,
@@ -44,6 +45,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const nav = [
     { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/worklog', label: t('nav.worklog'), icon: NotebookPen },
+    { href: '/challenge', label: t('nav.challenge'), icon: Flame },
     { href: '/analytics', label: t('nav.analytics'), icon: BarChart3 },
     { href: '/members', label: t('nav.members'), icon: Users },
   ];

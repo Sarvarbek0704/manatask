@@ -6,6 +6,7 @@ import {
   DependencyType,
   InvitationStatus,
   NotificationType,
+  WorkLogStatus,
   Locale,
 } from './enums';
 
@@ -190,7 +191,34 @@ export interface WorkLog {
   body: string | null;
   minutes: number | null;
   workedOn: string;
+  status: WorkLogStatus;
+  reviewedAt: string | null;
+  reviewedByName: string | null;
   createdAt: string;
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  target: number;
+  active: boolean;
+}
+
+export interface ChallengeCalendarDay {
+  date: string;
+  status: WorkLogStatus | 'none';
+  count: number;
+}
+
+export interface ChallengeProgress {
+  challenge: Challenge | null;
+  user: UserPublic;
+  accepted: number;
+  pending: number;
+  target: number;
+  days: ChallengeCalendarDay[];
 }
 
 export interface WorkLogSummary {

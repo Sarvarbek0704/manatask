@@ -7,7 +7,7 @@ import { Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { api, apiErrorMessage } from '@/lib/api';
 import { AuthShell } from '@/components/AuthShell';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Label, PasswordInput } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/primitives';
 
 function ResetForm() {
@@ -61,10 +61,7 @@ function ResetForm() {
       <form onSubmit={submit} className="space-y-4">
         <div>
           <Label htmlFor="password">New password</Label>
-          <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="pl-9" placeholder="••••••••" />
-          </div>
+          <PasswordInput id="password" leftIcon={Lock} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="••••••••" />
         </div>
         <Button type="submit" size="lg" className="w-full" loading={loading} disabled={!token}>Update password</Button>
       </form>

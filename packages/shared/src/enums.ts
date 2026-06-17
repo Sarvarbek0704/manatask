@@ -43,6 +43,12 @@ export enum DependencyType {
   RELATES_TO = 'relates_to',
 }
 
+export enum WorkLogStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+}
+
 export enum InvitationStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
@@ -58,6 +64,7 @@ export enum NotificationType {
   MENTIONED = 'mentioned',
   INVITED = 'invited',
   WORKLOG_POSTED = 'worklog_posted',
+  WORKLOG_REVIEWED = 'worklog_reviewed',
 }
 
 export enum ActivityAction {
@@ -87,4 +94,5 @@ export const RT_EVENTS = {
   NOTIFICATION: 'notification.new',
   PRESENCE: 'presence.update',
   WORKLOG_CREATED: 'worklog.created',
+  WORKLOG_REVIEWED: 'worklog.reviewed',
 } as const;
