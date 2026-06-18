@@ -17,6 +17,7 @@ import type {
   CreateWorkLogDto,
   Challenge,
   ChallengeProgress,
+  Team,
   Paginated,
   CreateTaskDto,
   UpdateTaskDto,
@@ -66,6 +67,58 @@ export function useInvitations(enabled = true) {
     enabled,
     queryFn: async () => (await api.get('/workspaces/current/invitations')).data,
   });
+}
+
+// ---- Teams ----
+export function useTeams() {
+  return useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => (await api.get<Team[]>('/teams')).data,
+  });
+}
+
+export function useTeamMutations() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['teams'] });
+  return {
+    create: useMutation({ mutationFn: async (b: { name: string; color?: string }) => (await api.post('/teams', b)).data, onSuccess: inv }),
+    update: useMutation({ mutationFn: async ({ id, ...b }: { id: string; name?: string; color?: string }) => (await api.patch(`/teams/${id}`, b)).data, onSuccess: inv }),
+    remove: useMutation({ mutationFn: async (id: string) => (await api.delete(`/teams/${id}`)).data, onSuccess: inv }),
+    addMember: useMutation({ mutationFn: async ({ id, userId }: { id: string; userId: string }) => (await api.post(`/teams/${id}/members`, { userId })).data, onSuccess: inv }),
+    removeMember: useMutation({ mutationFn: async ({ id, userId }: { id: string; userId: string }) => (await api.delete(`/teams/${id}/members/${userId}`)).data, onSuccess: inv }),
+  };
+}
+
+// ---- Calendar feed ----
+export function useCalendarFeed() {
+  return useQuery({
+    queryKey: ['calendar-feed'],
+    queryFn: async () => (await api.get('/calendar/feed')).data as { token: string; url: string },
+  });
+}
+export function useRegenerateCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => (await api.post('/calendar/regenerate')).data as { token: string; url: string },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['calendar-feed'] }),
+  });
+}
+
+// ---- GitHub integration ----
+export function useGithubConfig(enabled = true) {
+  return useQuery({
+    queryKey: ['github-config'],
+    enabled,
+    queryFn: async () => (await api.get('/integrations/github/config')).data as { connected: boolean; secret: string | null; webhookUrl: string },
+  });
+}
+export function useGithubMutations() {
+  const qc = useQueryClient();
+  const inv = () => qc.invalidateQueries({ queryKey: ['github-config'] });
+  return {
+    connect: useMutation({ mutationFn: async () => (await api.post('/integrations/github/connect')).data, onSuccess: inv }),
+    disconnect: useMutation({ mutationFn: async () => (await api.delete('/integrations/github/connect')).data, onSuccess: inv }),
+  };
 }
 
 export function useUpdateWorkspace() {

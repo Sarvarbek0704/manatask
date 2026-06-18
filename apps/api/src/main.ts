@@ -12,7 +12,7 @@ import { isAllowedOrigin } from './common/cors';
 async function bootstrap() {
   if (initSentry()) Logger.log('Sentry enabled', 'Bootstrap');
 
-  const app = await NestFactory.create(AppModule, { cors: false, bufferLogs: true });
+  const app = await NestFactory.create(AppModule, { cors: false, bufferLogs: true, rawBody: true });
   app.useLogger(app.get(PinoLogger));
   const config = app.get(ConfigService);
 

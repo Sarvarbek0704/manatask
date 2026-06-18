@@ -27,6 +27,10 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   emailVerified: boolean;
 
+  /** Capability token for the personal iCal calendar feed (rotatable). */
+  @Column({ type: 'varchar', nullable: true })
+  calendarToken: string | null;
+
   @OneToMany(() => WorkspaceMember, (m) => m.user)
   memberships: WorkspaceMember[];
 }

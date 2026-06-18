@@ -10,6 +10,7 @@ import {
   NotebookPen,
   Flame,
   ScrollText,
+  Users2,
   Plus,
   LogOut,
   Search,
@@ -55,6 +56,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     // Analytics & audit are management-only.
     ...(isLeader ? [{ href: '/analytics', label: t('nav.analytics'), icon: BarChart3 }] : []),
     { href: '/members', label: t('nav.members'), icon: Users },
+    ...(isLeader ? [{ href: '/teams', label: t('nav.teams'), icon: Users2 }] : []),
     ...(isLeader ? [{ href: '/audit', label: t('nav.audit'), icon: ScrollText }] : []),
   ];
 

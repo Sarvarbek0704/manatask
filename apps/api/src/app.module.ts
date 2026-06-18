@@ -34,6 +34,9 @@ import { ConfigModule as ConfigFeatureModule } from './modules/config/config.mod
 import { SearchModule } from './modules/search/search.module';
 import { SharingModule } from './modules/sharing/sharing.module';
 import { WorkLogsModule } from './modules/worklogs/worklogs.module';
+import { TeamsModule } from './modules/teams/teams.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 
 @Module({
   imports: [
@@ -125,6 +128,9 @@ import { WorkLogsModule } from './modules/worklogs/worklogs.module';
     SearchModule,
     SharingModule,
     WorkLogsModule,
+    TeamsModule,
+    CalendarModule,
+    IntegrationsModule,
     SchedulerModule,
   ],
   providers: [

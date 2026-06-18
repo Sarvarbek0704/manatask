@@ -14,6 +14,10 @@ export class Workspace extends BaseEntity {
   @Column({ type: 'varchar', nullable: true })
   logoUrl: string | null;
 
+  /** Shared secret for verifying inbound GitHub webhooks. */
+  @Column({ type: 'varchar', nullable: true, select: false })
+  githubSecret: string | null;
+
   @OneToMany(() => WorkspaceMember, (m) => m.workspace)
   members: WorkspaceMember[];
 

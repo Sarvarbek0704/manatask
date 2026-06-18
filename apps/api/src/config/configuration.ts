@@ -48,7 +48,11 @@ export default () => ({
     from: process.env.MAIL_FROM ?? 'manaTask <no-reply@manatask.local>',
   },
   uploadDir: process.env.UPLOAD_DIR ?? 'uploads',
-  apiUrl: process.env.API_PUBLIC_URL ?? `http://localhost:${process.env.API_PORT ?? '4000'}/${process.env.API_PREFIX ?? 'api'}`,
+  apiUrl:
+    process.env.API_PUBLIC_URL ??
+    (process.env.RENDER_EXTERNAL_URL
+      ? `${process.env.RENDER_EXTERNAL_URL}/${process.env.API_PREFIX ?? 'api'}`
+      : `http://localhost:${process.env.API_PORT ?? '4000'}/${process.env.API_PREFIX ?? 'api'}`),
   s3: {
     bucket: process.env.S3_BUCKET ?? '',
     region: process.env.S3_REGION ?? 'auto',

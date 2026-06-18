@@ -26,6 +26,7 @@ import { RecurringTask } from './recurring-task.entity';
 import { AutomationRule } from './automation-rule.entity';
 import { PublicShare } from './public-share.entity';
 import { WorkLog } from './work-log.entity';
+import { Team, TeamMember } from './team.entity';
 import { Challenge } from './challenge.entity';
 
 export {
@@ -58,6 +59,8 @@ export {
   PublicShare,
   WorkLog,
   Challenge,
+  Team,
+  TeamMember,
 };
 export { VerificationTokenType } from './verification-token.entity';
 export { CustomFieldType } from './custom-field.entity';
@@ -94,4 +97,6 @@ export const ALL_ENTITIES = [
   PublicShare,
   WorkLog,
   Challenge,
+  Team,
+  TeamMember,
 ];

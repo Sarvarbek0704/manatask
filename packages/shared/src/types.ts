@@ -180,6 +180,14 @@ export interface DashboardSummary {
   byAssignee: { user: UserPublic; open: number; done: number }[];
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+  members: UserPublic[];
+  createdAt: string;
+}
+
 export interface WorkLog {
   id: string;
   author: UserPublic;

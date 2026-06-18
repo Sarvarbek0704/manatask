@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sun, Moon, Monitor, Monitor as Device, Trash2, LogOut, Check, KeyRound, AlertCircle, Lock, Building2 } from 'lucide-react';
+import { Sun, Moon, Monitor, Monitor as Device, Trash2, LogOut, Check, KeyRound, AlertCircle, Lock, Building2, CalendarDays, Github, Copy, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { api, apiErrorMessage } from '@/lib/api';
 import { useAuth, useWorkspace } from '@/lib/store';
-import { useMyWorkspaces, useUpdateWorkspace } from '@/lib/hooks';
+import { useMyWorkspaces, useUpdateWorkspace, useCalendarFeed, useRegenerateCalendar, useGithubConfig, useGithubMutations } from '@/lib/hooks';
 import { useI18n, LOCALES } from '@/lib/i18n';
 import type { Locale } from '@manatask/shared';
 import { Card, Separator, Spinner } from '@/components/ui/primitives';
@@ -136,6 +136,10 @@ export default function SettingsPage() {
         </div>
       </Section>
 
+      <CalendarSection />
+
+      <GithubSection />
+
       <ChangePasswordSection />
 
       <Section title="Active sessions" description="Devices currently signed in to your account.">
@@ -172,6 +176,82 @@ export default function SettingsPage() {
         </Button>
       </Section>
     </div>
+  );
+}
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex items-center gap-2 rounded-md border border-input bg-surface-2/60 px-3 py-2">
+        <span className="min-w-0 flex-1 truncate font-mono text-xs">{value}</span>
+        <button
+          onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+          className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent"
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CalendarSection() {
+  const { t } = useI18n();
+  const { data } = useCalendarFeed();
+  const regen = useRegenerateCalendar();
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
+        <CalendarDays className="h-[18px] w-[18px] text-muted" />
+        <h2 className="font-semibold">{t('settings.calendar')}</h2>
+      </div>
+      <div className="space-y-4 p-6">
+        <p className="text-sm text-muted">{t('settings.calendarDesc')}</p>
+        {data && <CopyRow label="iCal URL" value={data.url} />}
+        <Button variant="outline" onClick={() => regen.mutate()} loading={regen.isPending}>
+          <RefreshCw className="h-4 w-4" /> {t('settings.regenerate')}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+function GithubSection() {
+  const { t } = useI18n();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
+  const role = workspaces?.find((w) => w.id === currentWorkspaceId)?.role;
+  const isLeader = role === 'owner' || role === 'admin';
+  const { data: cfg } = useGithubConfig(isLeader);
+  const gh = useGithubMutations();
+  if (!isLeader) return null;
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
+        <Github className="h-[18px] w-[18px] text-muted" />
+        <h2 className="font-semibold">{t('settings.github')}</h2>
+      </div>
+      <div className="space-y-4 p-6">
+        <p className="text-sm text-muted">{t('settings.githubDesc')}</p>
+        {cfg?.connected ? (
+          <>
+            <CopyRow label={t('settings.webhookUrl')} value={cfg.webhookUrl} />
+            {cfg.secret && <CopyRow label={t('settings.secret')} value={cfg.secret} />}
+            <p className="rounded-lg bg-surface-2/60 px-3 py-2 text-xs text-muted">{t('settings.githubHint')}</p>
+            <Button variant="outline" className="text-danger" onClick={() => gh.disconnect.mutate()} loading={gh.disconnect.isPending}>
+              {t('settings.disconnect')}
+            </Button>
+          </>
+        ) : (
+          <Button onClick={() => gh.connect.mutate()} loading={gh.connect.isPending}>
+            <Github className="h-4 w-4" /> {t('settings.connect')}
+          </Button>
+        )}
+      </div>
+    </Card>
   );
 }
 
