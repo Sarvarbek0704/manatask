@@ -220,8 +220,9 @@ export class TasksService {
     if (body.startDate !== undefined) task.startDate = body.startDate ? new Date(body.startDate) : null;
     if (body.estimateMinutes !== undefined) task.estimateMinutes = body.estimateMinutes;
     if (body.statusId !== undefined) {
-      await this.assertStatus(task.projectId, body.statusId);
-      task.statusId = body.statusId;
+      const status = await this.assertStatus(task.projectId, body.statusId);
+      task.status = status;
+      task.statusId = status.id;
     }
     if (body.labelIds !== undefined) {
       task.labels = body.labelIds.length
@@ -278,8 +279,11 @@ export class TasksService {
 
   async move(workspaceId: string, actorId: string, id: string, body: MoveTaskBody): Promise<TaskDto> {
     const task = await this.getEntity(workspaceId, id);
-    await this.assertStatus(task.projectId, body.statusId);
-    task.statusId = body.statusId;
+    const status = await this.assertStatus(task.projectId, body.statusId);
+    // `status` is eager-loaded — update the relation too, otherwise TypeORM
+    // writes the stale relation's id back and the move silently reverts.
+    task.status = status;
+    task.statusId = status.id;
     task.order = body.order;
     await this.tasks.save(task);
     const dto = toTask(await this.getEntity(workspaceId, id), await this.singleCounts(id));
@@ -368,9 +372,10 @@ export class TasksService {
     return sorted[0]?.id;
   }
 
-  private async assertStatus(projectId: string, statusId: string) {
+  private async assertStatus(projectId: string, statusId: string): Promise<ProjectStatus> {
     const ok = await this.statuses.findOne({ where: { id: statusId, projectId } });
     if (!ok) throw new BadRequestException('Status does not belong to this project.');
+    return ok;
   }
 
   private async nextOrder(projectId: string, statusId: string): Promise<number> {
