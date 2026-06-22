@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -q -m ' *)"
+      "Bash(git commit -q -m ' *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://manatask-beta.vercel.app/_next/static/chunks/app/\\(app\\)/projects/%5Bid%5D/page-4ed688c8a71abb73.js\")",
+      "Bash(curl -s \"https://manatask-beta.vercel.app/login\")",
+      "Bash(grep -oE '_next/static/[a-zA-Z0-9_-]+/_buildManifest.js|buildId[^,]{0,40}')"
     ]
   }
 }
