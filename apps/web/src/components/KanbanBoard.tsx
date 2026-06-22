@@ -28,16 +28,26 @@ export function KanbanBoard({
   tasks,
   onOpen,
   onAdd,
+  currentUserId,
+  canManageAll = false,
 }: {
   project: Project;
   tasks: Task[];
   members?: WorkspaceMember[];
   onOpen: (t: Task) => void;
   onAdd: (statusId: string) => void;
+  currentUserId?: string;
+  /** Owners/admins may move any task; others only their own. */
+  canManageAll?: boolean;
 }) {
   const move = useMoveTask();
   const [columns, setColumns] = useState<Columns>({});
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const canMove = (task: Task) =>
+    canManageAll ||
+    task.assignee?.id === currentUserId ||
+    (task.assignees ?? []).some((a) => a.id === currentUserId);
 
   useEffect(() => {
     const next: Columns = {};
@@ -68,6 +78,8 @@ export function KanbanBoard({
     if (!fromCol || !toCol) return;
     const activeTask = columns[fromCol].find((t) => t.id === active.id);
     if (!activeTask) return;
+    // Only the assignee (or a manager) may change a task's status.
+    if (!canMove(activeTask)) return;
 
     const target = [...columns[toCol].filter((t) => t.id !== active.id)];
     const overIndex = target.findIndex((t) => t.id === over.id);
@@ -106,6 +118,7 @@ export function KanbanBoard({
             projectKey={project.key}
             onOpen={onOpen}
             onAdd={() => onAdd(status.id)}
+            canMove={canMove}
           />
         ))}
       </div>
@@ -126,12 +139,14 @@ function Column({
   projectKey,
   onOpen,
   onAdd,
+  canMove,
 }: {
   status: Project['statuses'][number];
   tasks: Task[];
   projectKey: string;
   onOpen: (t: Task) => void;
   onAdd: () => void;
+  canMove: (t: Task) => boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status.id });
   const meta = CATEGORY_META[status.category];
@@ -159,7 +174,7 @@ function Column({
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
-            <SortableCard key={task.id} task={task} projectKey={projectKey} onOpen={() => onOpen(task)} />
+            <SortableCard key={task.id} task={task} projectKey={projectKey} onOpen={() => onOpen(task)} draggable={canMove(task)} />
           ))}
         </SortableContext>
         {tasks.length === 0 && (
@@ -175,12 +190,20 @@ function Column({
   );
 }
 
-function SortableCard({ task, projectKey, onOpen }: { task: Task; projectKey: string; onOpen: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+function SortableCard({ task, projectKey, onOpen, draggable }: { task: Task; projectKey: string; onOpen: () => void; draggable: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+    disabled: !draggable,
+  });
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        cursor: draggable ? undefined : 'pointer',
+      }}
       {...attributes}
       {...listeners}
     >

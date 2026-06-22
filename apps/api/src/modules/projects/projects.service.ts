@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StatusCategory } from '@manatask/shared';
-import { Project, ProjectStatus } from '../../database/entities';
+import { Project, ProjectStatus, Task } from '../../database/entities';
 import { toProject, toStatus } from '../../common/mappers';
 import { defaultStatuses } from '../../common/util';
 import {
@@ -21,6 +21,7 @@ export class ProjectsService {
   constructor(
     @InjectRepository(Project) private projects: Repository<Project>,
     @InjectRepository(ProjectStatus) private statuses: Repository<ProjectStatus>,
+    @InjectRepository(Task) private tasks: Repository<Task>,
   ) {}
 
   async create(workspaceId: string, body: CreateProjectBody) {
@@ -84,6 +85,19 @@ export class ProjectsService {
     await this.getEntity(workspaceId, id);
     await this.projects.update({ id, workspaceId }, { archived });
     return this.getOne(workspaceId, id);
+  }
+
+  /**
+   * Permanently delete a project and everything inside it. Tasks are removed
+   * first (cascading to their comments/checklist/time/deps) so the project
+   * delete doesn't trip the task→status RESTRICT constraint; the project delete
+   * then cascades its statuses and sprints.
+   */
+  async remove(workspaceId: string, id: string) {
+    await this.getEntity(workspaceId, id);
+    await this.tasks.delete({ projectId: id });
+    await this.projects.delete({ id, workspaceId });
+    return { ok: true };
   }
 
   // ---- Statuses ----

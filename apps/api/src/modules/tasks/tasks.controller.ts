@@ -23,7 +23,8 @@ import {
   CreateDependencyBody,
   LogTimeBody,
 } from './dto';
-import { CurrentUser, RequestUser, WorkspaceId } from '../../common/decorators';
+import { WorkspaceRole } from '@manatask/shared';
+import { CurrentUser, CurrentRole, RequestUser, WorkspaceId } from '../../common/decorators';
 import { WorkspaceGuard } from '../../common/guards/workspace.guard';
 
 @Controller('tasks')
@@ -88,13 +89,25 @@ export class TasksController {
   }
 
   @Patch(':id')
-  update(@WorkspaceId() ws: string, @CurrentUser() u: RequestUser, @Param('id') id: string, @Body() body: UpdateTaskBody) {
-    return this.tasks.update(ws, u.id, id, body);
+  update(
+    @WorkspaceId() ws: string,
+    @CurrentUser() u: RequestUser,
+    @CurrentRole() role: WorkspaceRole,
+    @Param('id') id: string,
+    @Body() body: UpdateTaskBody,
+  ) {
+    return this.tasks.update(ws, u.id, role, id, body);
   }
 
   @Patch(':id/move')
-  move(@WorkspaceId() ws: string, @CurrentUser() u: RequestUser, @Param('id') id: string, @Body() body: MoveTaskBody) {
-    return this.tasks.move(ws, u.id, id, body);
+  move(
+    @WorkspaceId() ws: string,
+    @CurrentUser() u: RequestUser,
+    @CurrentRole() role: WorkspaceRole,
+    @Param('id') id: string,
+    @Body() body: MoveTaskBody,
+  ) {
+    return this.tasks.move(ws, u.id, role, id, body);
   }
 
   @Delete(':id')

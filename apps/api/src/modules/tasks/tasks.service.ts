@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
@@ -12,6 +13,7 @@ import {
   RT_EVENTS,
   Paginated,
   Task as TaskDto,
+  WorkspaceRole,
 } from '@manatask/shared';
 import {
   Task,
@@ -192,11 +194,21 @@ export class TasksService {
     return dto;
   }
 
-  async update(workspaceId: string, actorId: string, id: string, body: UpdateTaskBody): Promise<TaskDto> {
+  async update(
+    workspaceId: string,
+    actorId: string,
+    role: WorkspaceRole,
+    id: string,
+    body: UpdateTaskBody,
+  ): Promise<TaskDto> {
     const task = await this.getEntity(workspaceId, id);
     // Optimistic concurrency: reject stale writes when the client sent a version.
     if (body.version !== undefined && body.version !== task.version) {
       throw new ConflictException('Task was modified by someone else. Please reload.');
+    }
+    // Changing status is restricted to the assignee (owner/admin exempt).
+    if (body.statusId !== undefined && body.statusId !== task.statusId) {
+      await this.assertCanSetStatus(workspaceId, id, actorId, role);
     }
     const prevAssignee = task.assigneeId;
     const prevStatus = task.statusId;
@@ -277,8 +289,15 @@ export class TasksService {
     return dto;
   }
 
-  async move(workspaceId: string, actorId: string, id: string, body: MoveTaskBody): Promise<TaskDto> {
+  async move(
+    workspaceId: string,
+    actorId: string,
+    role: WorkspaceRole,
+    id: string,
+    body: MoveTaskBody,
+  ): Promise<TaskDto> {
     const task = await this.getEntity(workspaceId, id);
+    await this.assertCanSetStatus(workspaceId, id, actorId, role);
     const status = await this.assertStatus(task.projectId, body.statusId);
     // `status` is eager-loaded — update the relation too, otherwise TypeORM
     // writes the stale relation's id back and the move silently reverts.
@@ -365,6 +384,30 @@ export class TasksService {
     });
     if (!task) throw new NotFoundException('Task not found.');
     return task;
+  }
+
+  /**
+   * Only the task's assignee may change its status. Owners and admins are
+   * exempt (they manage the whole board).
+   */
+  private async assertCanSetStatus(
+    workspaceId: string,
+    id: string,
+    actorId: string,
+    role: WorkspaceRole,
+  ): Promise<void> {
+    if (role === WorkspaceRole.OWNER || role === WorkspaceRole.ADMIN) return;
+    const t = await this.tasks.findOne({
+      where: { id, workspaceId },
+      relations: { assignees: true },
+    });
+    const isAssignee =
+      !!t && (t.assigneeId === actorId || (t.assignees ?? []).some((a) => a.id === actorId));
+    if (!isAssignee) {
+      throw new ForbiddenException(
+        'Only the assignee or an admin can change this task’s status.',
+      );
+    }
   }
 
   private firstStatusId(project: Project): string | undefined {

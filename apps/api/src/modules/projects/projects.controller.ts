@@ -60,6 +60,14 @@ export class ProjectsController {
     return this.projects.update(ws, id, body);
   }
 
+  // Hard delete — owner only, since it permanently removes all tasks inside.
+  @Delete('projects/:id')
+  @UseGuards(RolesGuard)
+  @MinRole(WorkspaceRole.OWNER)
+  remove(@WorkspaceId() ws: string, @Param('id') id: string) {
+    return this.projects.remove(ws, id);
+  }
+
   @Post('projects/:id/archive')
   @UseGuards(RolesGuard)
   @MinRole(WorkspaceRole.ADMIN)

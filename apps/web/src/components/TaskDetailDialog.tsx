@@ -14,7 +14,9 @@ import {
   useDeleteTask,
   useAddChecklist,
   useToggleChecklist,
+  useMyWorkspaces,
 } from '@/lib/hooks';
+import { useAuth, useWorkspace } from '@/lib/store';
 import { getSocket } from '@/lib/socket';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -69,6 +71,17 @@ export function TaskDetailDialog({
       s.off(RT_EVENTS.TASK_UPDATED, onUpdate);
     };
   }, [taskId, qc]);
+
+  const { user } = useAuth();
+  const { currentWorkspaceId } = useWorkspace();
+  const { data: workspaces } = useMyWorkspaces();
+  const role = workspaces?.find((w) => w.id === currentWorkspaceId)?.role;
+  const isLeader = role === 'owner' || role === 'admin';
+  // Only the assignee (or a manager) may change the status.
+  const canSetStatus =
+    isLeader ||
+    task?.assignee?.id === user?.id ||
+    (task?.assignees ?? []).some((a) => a.id === user?.id);
 
   const patch = (body: any) => update.mutate({ id: taskId, body });
   const remove = async () => { await del.mutateAsync(taskId); onClose(); };
@@ -178,7 +191,7 @@ export function TaskDetailDialog({
             {/* Sidebar */}
             <div className="space-y-4 overflow-y-auto border-t border-border bg-surface-2/40 px-5 py-6 scroll-area md:border-l md:border-t-0">
               <SideField label={t('task.status')}>
-                <Select value={task.statusId} onValueChange={(v) => patch({ statusId: v })}>
+                <Select value={task.statusId} onValueChange={(v) => patch({ statusId: v })} disabled={!canSetStatus}>
                   <SelectTrigger className="bg-surface"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {project.statuses.map((s) => (

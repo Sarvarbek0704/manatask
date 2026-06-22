@@ -175,6 +175,38 @@ export function useCreateProject() {
   });
 }
 
+export function useUpdateProject(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Partial<CreateProjectDto>) =>
+      (await api.patch<Project>(`/projects/${id}`, body)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      qc.invalidateQueries({ queryKey: ['project', id] });
+    },
+  });
+}
+
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => (await api.delete(`/projects/${id}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+  });
+}
+
+export function useArchiveProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, archived }: { id: string; archived: boolean }) =>
+      (await api.post(`/projects/${id}/${archived ? 'archive' : 'unarchive'}`)).data,
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['projects'] });
+      qc.invalidateQueries({ queryKey: ['project', v.id] });
+    },
+  });
+}
+
 // ---- Labels & Sprints ----
 export function useLabels() {
   return useQuery({
