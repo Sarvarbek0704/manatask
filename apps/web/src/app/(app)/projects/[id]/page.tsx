@@ -88,11 +88,9 @@ export default function ProjectPage() {
     };
   }, [qc]);
 
-  if (isLoading || !project) {
-    return <div className="flex h-full items-center justify-center"><Spinner className="h-6 w-6" /></div>;
-  }
-
   const tasks = tasksPage?.items ?? [];
+  // NOTE: keep all hooks above the early return below — moving useMemo after it
+  // changes the hook count between renders and crashes the page.
   const visibleTasks = useMemo(() => {
     if (assignee === 'all') return tasks;
     const uid = assignee === 'mine' ? user?.id : assignee;
@@ -100,6 +98,10 @@ export default function ProjectPage() {
       (task) => task.assignee?.id === uid || (task.assignees ?? []).some((a) => a.id === uid),
     );
   }, [tasks, assignee, user?.id]);
+
+  if (isLoading || !project) {
+    return <div className="flex h-full items-center justify-center"><Spinner className="h-6 w-6" /></div>;
+  }
 
   const views: { key: View; label: string; icon: typeof LayoutGrid }[] = [
     { key: 'kanban', label: t('view.kanban'), icon: LayoutGrid },
