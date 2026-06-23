@@ -152,7 +152,7 @@ function Column({
   const meta = CATEGORY_META[status.category];
 
   return (
-    <div className="flex w-72 shrink-0 flex-col">
+    <div className="flex h-full min-h-0 w-72 shrink-0 flex-col">
       <div className="mb-2 flex items-center gap-2 px-1">
         <span className={cn('h-2.5 w-2.5 rounded-full', meta.dot)} />
         <span className="text-sm font-semibold text-foreground">{status.name}</span>
@@ -168,7 +168,7 @@ function Column({
       <div
         ref={setNodeRef}
         className={cn(
-          'flex-1 space-y-2 rounded-xl border border-transparent p-1.5 transition-colors',
+          'min-h-0 flex-1 space-y-2 overflow-y-auto rounded-xl border border-transparent p-1.5 transition-colors scroll-area',
           isOver ? 'border-accent/40 bg-accent-soft/40' : 'bg-surface-2/40',
         )}
       >

@@ -54,12 +54,15 @@ export class MoveTaskBody {
 export class TaskQueryParams {
   @IsOptional() @IsUUID() projectId?: string;
   @IsOptional() assigneeId?: string;
-  @IsOptional() @IsUUID() sprintId?: string;
+  @IsOptional() @IsString() sprintId?: string; // UUID, or 'null' for backlog
   @IsOptional() @IsEnum(StatusCategory) statusCategory?: StatusCategory;
   @IsOptional() @IsEnum(TaskPriority) priority?: TaskPriority;
   @IsOptional() @IsString() search?: string;
   @IsOptional() @IsUUID() labelId?: string;
   @IsOptional() @IsDateString() dueBefore?: string;
+  @IsOptional() @IsDateString() dueAfter?: string;
+  @IsOptional() @IsString() dueSet?: string; // 'none' = no due date
+  @IsOptional() @IsString() archived?: string; // 'true' = archived only
   @IsOptional() parentId?: string;
   @IsOptional() page?: number;
   @IsOptional() pageSize?: number;

@@ -99,6 +99,30 @@ export class MaintenanceService {
     if (removed) this.logger.log(`Purged ${removed} expired sessions`);
   }
 
+  /**
+   * Auto-archive tasks that have sat in a "done" status for over 14 days, so
+   * boards stay lean as work piles up. Archived tasks stay searchable and in
+   * reports; they're just hidden from the default board view.
+   */
+  @Cron('0 4 * * *', { name: 'auto-archive-done' })
+  async autoArchiveDone() {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 14);
+    const res = await this.tasks
+      .createQueryBuilder('t')
+      .update(Task)
+      .set({ archivedAt: () => 'now()' })
+      .where('"archivedAt" IS NULL')
+      .andWhere('"deletedAt" IS NULL')
+      .andWhere('"updatedAt" < :cutoff', { cutoff })
+      .andWhere(
+        '"statusId" IN (SELECT id FROM project_statuses WHERE category = :cat)',
+        { cat: StatusCategory.DONE },
+      )
+      .execute();
+    if (res.affected) this.logger.log(`Auto-archived ${res.affected} long-done tasks`);
+  }
+
   /** Hard-delete tasks that have been in the trash for over 30 days. */
   @Cron('0 4 * * *', { name: 'purge-trash' })
   async purgeTrash() {

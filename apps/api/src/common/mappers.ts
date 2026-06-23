@@ -138,6 +138,7 @@ export function toTask(t: Task, counts: TaskCounts = {}): TaskDto {
     commentCount: counts.commentCount ?? 0,
     attachmentCount: counts.attachmentCount ?? 0,
     version: t.version ?? 0,
+    archivedAt: iso(t.archivedAt),
     createdAt: new Date(t.createdAt).toISOString(),
     updatedAt: new Date(t.updatedAt).toISOString(),
   };

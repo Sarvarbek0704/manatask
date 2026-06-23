@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { LayoutGrid, List as ListIcon, Calendar as CalIcon, Plus, Search, Download, MoreHorizontal, Pencil, Archive, Trash2, Users, AlertTriangle } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Calendar as CalIcon, Plus, Search, Download, MoreHorizontal, Pencil, Archive, Trash2, Users, AlertTriangle, CalendarClock, Rocket } from 'lucide-react';
 import { RT_EVENTS } from '@manatask/shared';
 import type { Task } from '@manatask/shared';
-import { useProject, useTasks, useMembers, useMyWorkspaces, useArchiveProject, useDeleteProject } from '@/lib/hooks';
+import { useProject, useTasks, useMembers, useMyWorkspaces, useArchiveProject, useDeleteProject, useSprints } from '@/lib/hooks';
 import { useAuth, useWorkspace } from '@/lib/store';
 import { getSocket } from '@/lib/socket';
 import { API_URL } from '@/lib/api';
+import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +54,29 @@ export default function ProjectPage() {
   const { data: project, isLoading } = useProject(id);
   const { data: members } = useMembers();
   const [search, setSearch] = useState('');
-  const { data: tasksPage } = useTasks({ projectId: id, search });
+  const [sprintFilter, setSprintFilter] = useState<string>('all'); // 'all' | 'active' | 'backlog'
+  const [dateFilter, setDateFilter] = useState<string>('all'); // 'all' | 'overdue' | 'today' | 'week' | 'none'
+  const [showArchived, setShowArchived] = useState(false);
+  const { data: sprints } = useSprints(id);
+  const activeSprint = useMemo(() => sprints?.find((s) => s.state === 'active'), [sprints]);
+
+  const taskParams = useMemo(() => {
+    const p: Record<string, string | undefined> = { projectId: id, search, pageSize: '200' };
+    if (sprintFilter === 'active') p.sprintId = activeSprint?.id ?? '__none__';
+    else if (sprintFilter === 'backlog') p.sprintId = 'null';
+    // Local day boundaries for the date filter.
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const endToday = new Date(start); endToday.setDate(endToday.getDate() + 1);
+    const endWeek = new Date(start); endWeek.setDate(endWeek.getDate() + 7);
+    if (dateFilter === 'overdue') p.dueBefore = start.toISOString();
+    else if (dateFilter === 'today') { p.dueAfter = start.toISOString(); p.dueBefore = endToday.toISOString(); }
+    else if (dateFilter === 'week') { p.dueAfter = start.toISOString(); p.dueBefore = endWeek.toISOString(); }
+    else if (dateFilter === 'none') p.dueSet = 'none';
+    if (showArchived) p.archived = 'true';
+    return p;
+  }, [id, search, sprintFilter, activeSprint?.id, dateFilter, showArchived]);
+
+  const { data: tasksPage } = useTasks(taskParams);
 
   const role = workspaces?.find((w) => w.id === currentWorkspaceId)?.role;
   const isOwner = role === 'owner';
@@ -131,7 +154,33 @@ export default function ProjectPage() {
           </TabsList>
         </Tabs>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Select value={sprintFilter} onValueChange={setSprintFilter}>
+            <SelectTrigger className="h-9 w-auto gap-1.5 text-sm">
+              <Rocket className="h-4 w-4 text-muted" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filter.allSprints')}</SelectItem>
+              <SelectItem value="active" disabled={!activeSprint}>
+                {activeSprint ? activeSprint.name : t('filter.activeSprint')}
+              </SelectItem>
+              <SelectItem value="backlog">{t('filter.backlog')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="h-9 w-auto gap-1.5 text-sm">
+              <CalendarClock className="h-4 w-4 text-muted" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('filter.anyDate')}</SelectItem>
+              <SelectItem value="overdue">{t('filter.overdue')}</SelectItem>
+              <SelectItem value="today">{t('filter.dueToday')}</SelectItem>
+              <SelectItem value="week">{t('filter.dueWeek')}</SelectItem>
+              <SelectItem value="none">{t('filter.noDueDate')}</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={assignee} onValueChange={setAssignee}>
             <SelectTrigger className="h-9 w-auto gap-1.5 text-sm">
               <Users className="h-4 w-4 text-muted" />
@@ -149,6 +198,20 @@ export default function ProjectPage() {
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('common.search')} className="h-9 w-44 pl-8" />
           </div>
+          <Tooltip content={t('filter.archived')}>
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              aria-pressed={showArchived}
+              className={cn(
+                'flex h-9 w-9 items-center justify-center rounded-md border transition-colors',
+                showArchived
+                  ? 'border-accent bg-accent-soft text-accent'
+                  : 'border-border text-muted hover:bg-surface-2 hover:text-foreground',
+              )}
+            >
+              <Archive className="h-4 w-4" />
+            </button>
+          </Tooltip>
           <Tooltip content="Export CSV">
             <a
               href={`${API_URL}/projects/${project.id}/export.csv`}
@@ -183,6 +246,13 @@ export default function ProjectPage() {
           )}
         </div>
       </div>
+
+      {tasksPage && tasksPage.total > tasks.length && (
+        <div className="flex items-center gap-2 border-b border-warning/30 bg-warning/10 px-4 py-1.5 text-xs text-foreground/80">
+          <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+          {t('filter.moreHidden').replace('{n}', String(tasksPage.total - tasks.length))}
+        </div>
+      )}
 
       <div className="min-h-0 flex-1 overflow-hidden">
         {view === 'kanban' && (

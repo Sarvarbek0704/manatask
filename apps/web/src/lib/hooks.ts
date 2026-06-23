@@ -281,6 +281,18 @@ export function useDeleteTask() {
   });
 }
 
+export function useArchiveTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, archived }: { id: string; archived: boolean }) =>
+      (await api.patch<Task>(`/tasks/${id}/archive`, { archived })).data,
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['task', v.id] });
+    },
+  });
+}
+
 // ---- Comments ----
 export function useComments(taskId?: string) {
   return useQuery({

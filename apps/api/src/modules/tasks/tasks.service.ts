@@ -143,12 +143,18 @@ export class TasksService {
 
     if (q.projectId) qb.andWhere('t.projectId = :projectId', { projectId: q.projectId });
     if (q.assigneeId) qb.andWhere('t.assigneeId = :assigneeId', { assigneeId: q.assigneeId });
-    if (q.sprintId) qb.andWhere('t.sprintId = :sprintId', { sprintId: q.sprintId });
+    if (q.sprintId === 'null') qb.andWhere('t.sprintId IS NULL');
+    else if (q.sprintId) qb.andWhere('t.sprintId = :sprintId', { sprintId: q.sprintId });
     if (q.priority) qb.andWhere('t.priority = :priority', { priority: q.priority });
     if (q.statusCategory) qb.andWhere('status.category = :cat', { cat: q.statusCategory });
     if (q.parentId === 'null') qb.andWhere('t.parentId IS NULL');
     else if (q.parentId) qb.andWhere('t.parentId = :parentId', { parentId: q.parentId });
     if (q.dueBefore) qb.andWhere('t.dueDate <= :dueBefore', { dueBefore: q.dueBefore });
+    if (q.dueAfter) qb.andWhere('t.dueDate >= :dueAfter', { dueAfter: q.dueAfter });
+    if (q.dueSet === 'none') qb.andWhere('t.dueDate IS NULL');
+    // Archived tasks are hidden from the board unless explicitly requested.
+    if (q.archived === 'true') qb.andWhere('t.archivedAt IS NOT NULL');
+    else qb.andWhere('t.archivedAt IS NULL');
     if (q.labelId) qb.andWhere('labels.id = :labelId', { labelId: q.labelId });
     if (q.search) {
       qb.andWhere('(t.title ILIKE :s OR t.description ILIKE :s)', { s: `%${q.search}%` });
@@ -333,6 +339,23 @@ export class TasksService {
     this.realtime.emitToWorkspace(workspaceId, RT_EVENTS.TASK_DELETED, { id });
     void this.webhooks.dispatch(workspaceId, RT_EVENTS.TASK_DELETED, { id });
     return { ok: true };
+  }
+
+  async setArchived(workspaceId: string, actorId: string, id: string, archived: boolean): Promise<TaskDto> {
+    const task = await this.getEntity(workspaceId, id);
+    task.archivedAt = archived ? new Date() : null;
+    await this.tasks.save(task);
+    await this.activity.record({
+      workspaceId,
+      actorId,
+      action: ActivityAction.UPDATED,
+      entityType: 'task',
+      entityId: id,
+      meta: { archived },
+    });
+    const dto = await this.getOne(workspaceId, id);
+    this.realtime.emitToWorkspace(workspaceId, RT_EVENTS.TASK_UPDATED, dto);
+    return dto;
   }
 
   async listActivity(workspaceId: string, id: string) {

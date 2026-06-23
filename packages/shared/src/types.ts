@@ -148,6 +148,7 @@ export interface Task {
   attachmentCount: number;
   /** Optimistic-concurrency version; pass back in UpdateTaskDto to detect conflicts. */
   version: number;
+  archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

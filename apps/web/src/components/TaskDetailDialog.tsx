@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Send, Trash2, Plus, Check } from 'lucide-react';
+import { Send, Trash2, Plus, Check, Archive } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RT_EVENTS, TaskPriority } from '@manatask/shared';
 import type { Project, WorkspaceMember } from '@manatask/shared';
@@ -12,6 +12,7 @@ import {
   useAddComment,
   useUpdateTask,
   useDeleteTask,
+  useArchiveTask,
   useAddChecklist,
   useToggleChecklist,
   useMyWorkspaces,
@@ -46,6 +47,7 @@ export function TaskDetailDialog({
   const addComment = useAddComment(taskId);
   const update = useUpdateTask();
   const del = useDeleteTask();
+  const archive = useArchiveTask();
   const addCheck = useAddChecklist(taskId);
   const toggleCheck = useToggleChecklist(taskId);
 
@@ -85,6 +87,7 @@ export function TaskDetailDialog({
 
   const patch = (body: any) => update.mutate({ id: taskId, body });
   const remove = async () => { await del.mutateAsync(taskId); onClose(); };
+  const toggleArchive = async () => { await archive.mutateAsync({ id: taskId, archived: !task?.archivedAt }); onClose(); };
   const checklistDone = task?.checklist.filter((c) => c.done).length ?? 0;
 
   return (
@@ -258,6 +261,9 @@ export function TaskDetailDialog({
                 Created {format(new Date(task.createdAt), 'MMM d, yyyy')}
               </div>
 
+              <Button variant="outline" onClick={toggleArchive} className="w-full">
+                <Archive className="h-4 w-4" /> {task.archivedAt ? t('task.unarchive') : t('task.archive')}
+              </Button>
               <Button variant="outline" onClick={remove} className="w-full text-danger">
                 <Trash2 className="h-4 w-4" /> {t('task.delete')}
               </Button>

@@ -126,6 +126,10 @@ export class Task extends BaseEntity {
   @OneToMany(() => TimeEntry, (t) => t.task)
   timeEntries: TimeEntry[];
 
+  /** Set when the task is archived (manually or auto for long-done tasks). Hidden from the board by default. */
+  @Column({ type: 'timestamptz', nullable: true })
+  archivedAt: Date | null;
+
   /** Soft delete — rows with deletedAt set are excluded from normal queries. */
   @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deletedAt: Date | null;

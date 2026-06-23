@@ -110,6 +110,16 @@ export class TasksController {
     return this.tasks.move(ws, u.id, role, id, body);
   }
 
+  @Patch(':id/archive')
+  archive(
+    @WorkspaceId() ws: string,
+    @CurrentUser() u: RequestUser,
+    @Param('id') id: string,
+    @Body() body: { archived?: boolean },
+  ) {
+    return this.tasks.setArchived(ws, u.id, id, body.archived !== false);
+  }
+
   @Delete(':id')
   remove(@WorkspaceId() ws: string, @CurrentUser() u: RequestUser, @Param('id') id: string) {
     return this.tasks.remove(ws, u.id, id);

@@ -8,7 +8,8 @@
       "Bash(command -v psql)",
       "Bash(node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/lookup.js\")",
       "Bash(NODE_PATH=\"d:/Dev/projects/manaTask/node_modules\" node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/lookup.js\")",
-      "Bash(NODE_PATH=\"d:/Dev/projects/manaTask/node_modules\" node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/insert.js\")"
+      "Bash(NODE_PATH=\"d:/Dev/projects/manaTask/node_modules\" node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/insert.js\")",
+      "Bash(python -)"
     ]
   }
 }
