@@ -26,7 +26,9 @@ export function ContributionCalendar({
   const { weeks, monthLabels } = useMemo(() => {
     if (!days.length) return { weeks: [] as (ChallengeCalendarDay | null)[][], monthLabels: [] as { col: number; label: string }[] };
     const first = parseISO(days[0].date);
-    const lead = (first.getUTCDay() + 6) % 7; // 0 = Monday
+    // parseISO gives local midnight, so read the weekday locally too — getUTCDay()
+    // would shift a day back in positive-offset timezones (e.g. UTC+5) and misalign rows.
+    const lead = (first.getDay() + 6) % 7; // 0 = Monday
     const cells: (ChallengeCalendarDay | null)[] = [...Array(lead).fill(null), ...days];
     const weeks: (ChallengeCalendarDay | null)[][] = [];
     for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));

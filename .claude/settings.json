@@ -4,7 +4,11 @@
       "Bash(git commit -q -m ' *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://manatask-beta.vercel.app/_next/static/chunks/app/\\(app\\)/projects/%5Bid%5D/page-4ed688c8a71abb73.js\")",
       "Bash(curl -s \"https://manatask-beta.vercel.app/login\")",
-      "Bash(grep -oE '_next/static/[a-zA-Z0-9_-]+/_buildManifest.js|buildId[^,]{0,40}')"
+      "Bash(grep -oE '_next/static/[a-zA-Z0-9_-]+/_buildManifest.js|buildId[^,]{0,40}')",
+      "Bash(command -v psql)",
+      "Bash(node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/lookup.js\")",
+      "Bash(NODE_PATH=\"d:/Dev/projects/manaTask/node_modules\" node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/lookup.js\")",
+      "Bash(NODE_PATH=\"d:/Dev/projects/manaTask/node_modules\" node \"C:/Users/VICTUS/AppData/Local/Temp/claude/d--Dev-projects-manaTask/14205c0b-a3b8-4c35-8ace-77c26f84f953/scratchpad/insert.js\")"
     ]
   }
 }
